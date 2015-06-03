@@ -1,4 +1,7 @@
 *.class
+# accounts db directory
+taxdb/
+derby.log
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
