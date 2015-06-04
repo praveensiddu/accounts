@@ -95,24 +95,24 @@ public class BankStatement
 
     public void makeUnique(final TR tr)
     {
-        String key = "" + tr.getDate();
+        String key2 = "" + tr.getDate();
         if (tr.getDesc() != null)
         {
-            key += ", DESC=" + tr.getDesc();
+            key2 += ", DESC=" + tr.getDesc();
         }
-        if (trMap.containsKey(key))
+        if (trMap.containsKey(key2))
         {
-            String key1 = key;
+            String key1 = key2;
             int i = 1;
             for (; trMap.containsKey(key1); i++)
             {
-                key1 = key + ", MKUNIQ" + i;
+                key1 = key2 + ", MKUNIQ" + i;
             }
             tr.setDesc(tr.getDesc() + ", MKUNIQ" + i);
             trMap.put(key1, tr);
         } else
         {
-            trMap.put(key, tr);
+            trMap.put(key2, tr);
         }
 
     }
