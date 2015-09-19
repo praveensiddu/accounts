@@ -13,7 +13,9 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DBImpl
+import accounts.db.TR;
+
+public class DBImplJdbc
 {
     private static final String DRIVER = "org.apache.derby.jdbc.EmbeddedDriver";
 
@@ -64,18 +66,18 @@ public class DBImpl
     public void importBankStatement(final Connection con, final BankStatement bs) throws IOException, SQLException
     {
 
-        if (!accountExists(con, bs.getAccountName()))
+        if (!accountExists(con, bs.getBankAccount().getName()))
         {
-            throw new IOException("Account not present=" + bs.getAccountName());
+            throw new IOException("Account not present=" + bs.getBankAccount().getName());
         }
-        final String tableName = "TRANSACTIONS_" + bs.getAccountName();
+        final String tableName = "TRANSACTIONS_" + bs.getBankAccount().getName();
         if (!tableExists(con, tableName))
         {// This cannot happen in practice
-            throw new IOException("Transaction table not present for account=" + bs.getAccountName());
+            throw new IOException("Transaction table not present for account=" + bs.getBankAccount().getName());
 
         }
 
-        for (final TR tr : bs.getTrs())
+        for (final TR tr : bs.getTrs().values())
         {
 
             final PreparedStatement psInsert = con.prepareStatement("insert into " + tableName
@@ -83,7 +85,7 @@ public class DBImpl
 
             final java.sql.Date sqlDate = new java.sql.Date(tr.getDate().getTime());
             psInsert.setDate(1, sqlDate);
-            psInsert.setString(2, tr.getDesc());
+            psInsert.setString(2, tr.getDescription());
             psInsert.setFloat(3, tr.getDebit());
 
             try
@@ -91,7 +93,7 @@ public class DBImpl
                 psInsert.executeUpdate();
             } catch (final SQLIntegrityConstraintViolationException ex)
             {
-                throw new IOException("constraint violation" + tr.getDesc());
+                throw new IOException("constraint violation" + tr.getDescription());
             }
             psInsert.close();
 
@@ -264,7 +266,7 @@ public class DBImpl
         }
         System.out.println("option A=" + argHash.get("A"));
         final String action = argHash.get("A");
-        final DBImpl dbi = new DBImpl();
+        final DBImplJdbc dbi = new DBImplJdbc();
         if (CREATEDB.equalsIgnoreCase(action))
         {
             try

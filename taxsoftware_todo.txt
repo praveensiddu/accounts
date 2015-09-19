@@ -1,0 +1,13 @@
+portfolio location configurable
+rent calculation
+mortgage interest 
+insurance
+closing cost check with Chunilal
+
+Check with Cheema on closing cost
+delete a transaction
+weepingwillow
+validate the format of bank statement to make sure it is from the right bank
+validate the format of transaction statement
+
+snapshot of database

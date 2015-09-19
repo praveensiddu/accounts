@@ -1,11 +1,11 @@
 ----------------------------------------------------------------
-Sat May 30 22:09:19 EDT 2015:
-Booting Derby version The Apache Software Foundation - Apache Derby - 10.11.1.2 - (1629631): instance a816c00e-014d-a7ba-fcb4-000000cce8a0 
-on database directory E:\temp\DERBYTUTOR\taxdb with class loader sun.misc.Launcher$AppClassLoader@387f44 
+Fri Sep 18 23:24:26 EDT 2015:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.11.1.2 - (1629631): instance a816c00e-014f-e3a1-a653-0000002d9aa8 
+on database directory E:\temp\DERBY_DB_ACCOUNTS\test1\taxdb with class loader sun.misc.Launcher$AppClassLoader@387f44 
 Loaded from file:/C:/Program%20Files/Java/jdk1.8.0_45/db/lib/derby.jar
 java.vendor=Oracle Corporation
 java.runtime.version=1.8.0_45-b15
-user.dir=C:\Users\HOME\workspace\acoounts
+user.dir=C:\Users\HOME\workspace\accounts
 os.name=Windows 7
 os.arch=x86
 os.version=6.1

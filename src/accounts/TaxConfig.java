@@ -11,6 +11,7 @@ public class TaxConfig
 {
     public static final String                 BACCOUNT         = "baccount";
     public static final String                 TRANSACTION_TYPE = "transaction_type";
+    public static final String                 INCLUDE_FILE     = "include_file";
     public static final String                 DESC_CONTAINS    = "desc_contains";
     public static final String                 DESC_STARTSWITH  = "desc_startswith";
 
@@ -29,6 +30,7 @@ public class TaxConfig
         try
         {
             String currentAccount = null;
+            String currentProperty = null;
 
             int lineno = 1;
             RuleRecord rr = new RuleRecord();
@@ -44,14 +46,14 @@ public class TaxConfig
                 {
                     continue;
                 }
-                final String[] fields = line.split("=");
+                String[] fields = line.split("=");
                 if (fields.length != 2)
                 {
                     throw new IOException("invalid format at line=" + lineno + ", Expected format key=value. Found=" + line);
                 }
 
-                final String key = fields[0].trim().toLowerCase();
-                final String value = fields[1].trim().toLowerCase();
+                String key = fields[0].trim().toLowerCase();
+                String value = fields[1].trim().toLowerCase();
                 if (currentAccount == null)
                 {
                     if (!BACCOUNT.equals(key))
@@ -66,8 +68,11 @@ public class TaxConfig
                     continue;
                 } else if (TRANSACTION_TYPE.equals(key))
                 {
+                    if (currentProperty == null)
+                        throw new IOException("PROPERTY should be set before TRANSACTION_TYPE");
                     // it is a new record. Create a new record
                     rr = rr.createNew();
+                    rr.setProperty(currentProperty);
                     rr.setLineno(lineno);
 
                     rr.setTrType(value);
@@ -79,6 +84,22 @@ public class TaxConfig
                         accountsMap.put(currentAccount, arr);
                     }
                     arr.add(rr);
+                } else if (INCLUDE_FILE.equals(key))
+                {
+
+                    ArrayList<RuleRecord> arr = accountsMap.get(currentAccount);
+                    if (arr == null)
+                    {
+                        arr = new ArrayList<RuleRecord>();
+                        accountsMap.put(currentAccount, arr);
+                    }
+                    TaxConfigInclude tcf = new TaxConfigInclude(value);
+                    for (RuleRecord rrinclude : tcf.getRuleRecordList())
+                    {
+                        rrinclude.setProperty(rr.getProperty());
+                        arr.add(rrinclude);
+                    }
+
                 } else if (DESC_CONTAINS.equals(key))
                 {
                     rr.setDescContains(value);
@@ -90,7 +111,7 @@ public class TaxConfig
                     rr.setTaxCategory(value);
                 } else if (PROPERTY.equals(key))
                 {
-                    rr.setProperty(value);
+                    currentProperty = value;
                 }
 
             }
