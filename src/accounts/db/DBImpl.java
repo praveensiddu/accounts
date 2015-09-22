@@ -36,7 +36,7 @@ public class DBImpl implements DBIfc
                 if (System.getProperty("ACCOUNTSDB") == null)
                 {
                     throw new IOException(
-                            "Java system property ACCOUNTSDB should be set to the directory where accounts database is present.");
+                            "Set Java system property ACCOUNTSDB to directory where accounts DB is present or to be created");
                 } else
                 {
                     dir = System.getProperty("ACCOUNTSDB");
@@ -44,8 +44,8 @@ public class DBImpl implements DBIfc
             }
             File d = new File(dir);
             Map<String, String> properties = new HashMap<String, String>();
-            properties.put("javax.persistence.jdbc.url", "jdbc:derby:" + d.getCanonicalPath().replace("\\", "/")
-                    + "/taxdb;create=true");
+            properties.put("javax.persistence.jdbc.url",
+                    "jdbc:derby:" + d.getCanonicalPath().replace("\\", "/") + "/taxdb;create=true");
             factory = Persistence.createEntityManagerFactory("taxaccounting", properties);
             // creates tables if it does not exist
             EntityManager em = factory.createEntityManager();
@@ -608,8 +608,8 @@ public class DBImpl implements DBIfc
         System.out.println("    -A deleteac -name <n>\n");
         System.out.println("    -A createacs -file <f>\n");
         System.out.println("    -A deleteacs -file <f>\n");
-        System.out
-                .println("    -A createprop -name <n> -cost <int> -renovation <int> -purchasedate <mm/dd/yyyy>  [-landvalue <int>] [-closingcost <int>] \n");
+        System.out.println(
+                "    -A createprop -name <n> -cost <int> -renovation <int> -purchasedate <mm/dd/yyyy>  [-landvalue <int>] [-closingcost <int>] \n");
 
         System.out.println("    -A deleteprop -name <n>\n");
         System.out.println("    -A createprops -file <f>\n");
@@ -620,18 +620,19 @@ public class DBImpl implements DBIfc
         System.exit(1);
     }
 
-    public static final String              CREATEAC     = "createac";
-    public static final String              CREATEACS    = "createacs";
-    public static final String              DELETEAC     = "deleteac";
-    public static final String              DELETEACS    = "deleteacs";
-    public static final String              CREATEPROP   = "createprop";
-    public static final String              CREATEPROPS  = "createprops";
-    public static final String              DELETEPROP   = "deleteprop";
-    public static final String              DELETEPROPS  = "deleteprops";
-    public static final String              CREATEGROUPS = "creategroups";
-    public static final String              DELETEGROUPS = "deletegroups";
+    public static final String CREATEAC     = "createac";
+    public static final String CREATEACS    = "createacs";
+    public static final String DELETEAC     = "deleteac";
+    public static final String DELETEACS    = "deleteacs";
+    public static final String CREATEPROP   = "createprop";
+    public static final String CREATEPROPS  = "createprops";
+    public static final String DELETEPROP   = "deleteprop";
+    public static final String DELETEPROPS  = "deleteprops";
+    public static final String CREATEGROUPS = "creategroups";
+    public static final String DELETEGROUPS = "deletegroups";
 
-    public static final Map<String, String> ALL_OPTS     = new HashMap<String, String>();
+    public static final Map<String, String> ALL_OPTS = new HashMap<String, String>();
+
     static
     {
         ALL_OPTS.put("A", Getopt.CONTRNT_S);
