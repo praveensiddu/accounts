@@ -21,7 +21,7 @@ public class DBFactory
         DBIfc dbIfc = DBFactory.createDBIfc();
         try
         {
-            dbIfc.createAndConnectDB("E:/temp/DERBYTUTOR/");
+            dbIfc.createAndConnectDB(null);
         } catch (IOException e)
         {
             // TODO Auto-generated catch block
@@ -36,7 +36,12 @@ public class DBFactory
             {
                 System.out.println(ba);
             }
-            dbIfc.createBankAccount(args[0]);
+            if (args.length < 2)
+            {
+                System.out.println("Usage: acname bankname");
+                System.exit(-1);
+            }
+            dbIfc.createBankAccount(args[0], args[1]);
             for (BankAccount ba : accounts.values())
             {
                 System.out.println(ba);

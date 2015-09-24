@@ -13,6 +13,8 @@ public class BankAccount
     @Id
     @Column(length = 40)
     private String name;
+    @Column(length = 40)
+    private String bankName;
     private int    trTableId;
 
     public String getName()
@@ -22,10 +24,21 @@ public class BankAccount
 
     public void setName(String name)
     {
-
         if (name == null)
             return;
         this.name = name.trim().toLowerCase();
+    }
+
+    public String getBankName()
+    {
+        return bankName;
+    }
+
+    public void setBankName(String bankName)
+    {
+        if (name == null)
+            return;
+        this.bankName = bankName.trim().toLowerCase();
     }
 
     public int getTrTableId()

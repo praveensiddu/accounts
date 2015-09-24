@@ -139,6 +139,7 @@ public class AccountsMainApp
     public static final Map<String, Integer> scheduleEMap;
     public static final String[]             scheduleEAry     = { null, null, null, RENT, null, null, null, null, COMMISSIONS,
             INSURANCE, PROFESSIONALFEES, null, MORTGAGEINTEREST, null, REPAIRS, null, TAX, UTILITIES, DEPRECIATION, HOA, OTHER };
+
     static
     {
         scheduleEMap = new HashMap<String, Integer>();
@@ -158,7 +159,8 @@ public class AccountsMainApp
 
     private static StringBuffer reportFromPropMap(final Map<String, ArrayList<TR>> propTrMap,
                                                   final Map<String, ArrayList<TR>> groupTrMap,
-                                                  final Map<String, RealProperty> propertyMap, final Map<String, IGroup> groupsMap)
+                                                  final Map<String, RealProperty> propertyMap,
+                                                  final Map<String, IGroup> groupsMap)
     {
         Map<String, Map<String, Float>> propTrTypeTotalMap = new HashMap<String, Map<String, Float>>();
 
@@ -232,7 +234,8 @@ public class AccountsMainApp
                     } else
                     {
                         totalExpense += (trTypeMap.get(scheduleEAry[i]) / ownerCount);
-                        sb.append("    " + i + " " + scheduleEAry[i] + "=" + (trTypeMap.get(scheduleEAry[i]) / ownerCount) + "\n");
+                        sb.append(
+                                "    " + i + " " + scheduleEAry[i] + "=" + (trTypeMap.get(scheduleEAry[i]) / ownerCount) + "\n");
                     }
                 }
             }
@@ -493,20 +496,21 @@ public class AccountsMainApp
         System.exit(1);
     }
 
-    public static final String              PARSE            = "parse";
-    public static final String              IMPORT2DB        = "import2db";
-    public static final String              PARSEANDCLASSIFY = "parseandclassify";
-    public static final String              CLASSIFYINDB     = "classifyindb";
-    public static final String              EXPORTTR         = "exporttr";
-    public static final String              IMPORTTR         = "importtr";
+    public static final String PARSE            = "parse";
+    public static final String IMPORT2DB        = "import2db";
+    public static final String PARSEANDCLASSIFY = "parseandclassify";
+    public static final String CLASSIFYINDB     = "classifyindb";
+    public static final String EXPORTTR         = "exporttr";
+    public static final String IMPORTTR         = "importtr";
 
-    public static final String              CREATEACS        = "createacs";
-    public static final String              DELETEACS        = "deleteacs";
-    public static final String              CREATEPROPS      = "createprops";
-    public static final String              DELETEPROPS      = "deleteprops";
-    public static final String              CREATEGROUPS     = "creategroups";
-    public static final String              DELETEGROUPS     = "deletegroups";
-    public static final Map<String, String> ALL_OPTS         = new HashMap<String, String>();
+    public static final String              CREATEACS    = "createacs";
+    public static final String              DELETEACS    = "deleteacs";
+    public static final String              CREATEPROPS  = "createprops";
+    public static final String              DELETEPROPS  = "deleteprops";
+    public static final String              CREATEGROUPS = "creategroups";
+    public static final String              DELETEGROUPS = "deletegroups";
+    public static final Map<String, String> ALL_OPTS     = new HashMap<String, String>();
+
     static
     {
         ALL_OPTS.put("A", Getopt.CONTRNT_S);
@@ -536,17 +540,17 @@ public class AccountsMainApp
                 {
                     usage("-file argument is required.");
                 }
-                List<String> acL = DBImpl.parseAccountFile(argHash.get("file"));
+                List<BankAccount> acL = DBImpl.parseAccountFile(argHash.get("file"));
                 DBIfc dbi = DBFactory.createDBIfc();
                 dbi.createAndConnectDB(null);
-                for (String ac : acL)
+                for (BankAccount ac : acL)
                 {
-                    if (dbi.getAccounts() != null && dbi.getAccounts().containsKey(ac))
+                    if (dbi.getAccounts() != null && dbi.getAccounts().containsKey(ac.getName()))
                     {
                         System.out.println("Account is already present=" + ac);
                     } else
                     {
-                        dbi.createBankAccount(ac);
+                        dbi.createBankAccount(ac.getName(), ac.getBankName());
                     }
                 }
                 for (BankAccount ba : dbi.getAccounts().values())
@@ -559,12 +563,12 @@ public class AccountsMainApp
                 {
                     usage("-file argument is required.");
                 }
-                List<String> acL = DBImpl.parseAccountFile(argHash.get("file"));
+                List<BankAccount> acL = DBImpl.parseAccountFile(argHash.get("file"));
                 DBIfc dbi = DBFactory.createDBIfc();
                 dbi.createAndConnectDB(null);
-                for (String ac : acL)
+                for (BankAccount ac : acL)
                 {
-                    dbi.deleteBankAccount(ac);
+                    dbi.deleteBankAccount(ac.getName());
                 }
                 for (BankAccount ba : dbi.getAccounts().values())
                 {

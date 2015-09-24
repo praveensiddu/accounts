@@ -97,7 +97,7 @@ public class DBImpl implements DBIfc
     }
 
     @Override
-    public void createBankAccount(String accountName) throws DBException
+    public void createBankAccount(String accountName, String bankName) throws DBException
     {
         if (accountName == null)
             throw new DBException(DBException.INVALID_INPUT, "account name is null");
@@ -110,6 +110,7 @@ public class DBImpl implements DBIfc
             throw new DBException(DBException.ACCOUNT_MAX_LIMIT, "Max accounts limit reached");
         BankAccount ba = new BankAccount();
         ba.setName(accountName);
+        ba.setBankName(bankName);
         int tableId = getNextTableId();
         ba.setTrTableId(tableId);
         // TR tr = createTR(tableId);
@@ -419,11 +420,11 @@ public class DBImpl implements DBIfc
 
     }
 
-    public static List<String> parseAccountFile(String filename) throws IOException, ParseException
+    public static List<BankAccount> parseAccountFile(String filename) throws IOException, ParseException
     {
         final FileReader fr = new FileReader(filename);
         final BufferedReader br = new BufferedReader(fr);
-        List<String> aL = new ArrayList<String>();
+        List<BankAccount> aL = new ArrayList<BankAccount>();
         try
         {
             for (String line; (line = br.readLine()) != null;)
@@ -438,7 +439,17 @@ public class DBImpl implements DBIfc
                 {
                     continue;
                 }
-                aL.add(line);
+
+                String[] fields = line.split(",");
+                if (fields.length != 2)
+                {
+                    throw new IOException("Invalid account line=" + line);
+                }
+                BankAccount ba = new BankAccount();
+                ba.setName(fields[0]);
+                ba.setBankName(fields[1]);
+                aL.add(ba);
+
             }
         } finally
         {
@@ -604,7 +615,7 @@ public class DBImpl implements DBIfc
             System.out.println(err);
         }
         System.out.println("Usage: -A action options\n");
-        System.out.println("    -A createac -name <n>\n");
+        System.out.println("    -A createac -name <n> -bank <n>\n");
         System.out.println("    -A deleteac -name <n>\n");
         System.out.println("    -A createacs -file <f>\n");
         System.out.println("    -A deleteacs -file <f>\n");
@@ -637,6 +648,7 @@ public class DBImpl implements DBIfc
     {
         ALL_OPTS.put("A", Getopt.CONTRNT_S);
         ALL_OPTS.put("name", Getopt.CONTRNT_S);
+        ALL_OPTS.put("bank", Getopt.CONTRNT_S);
         ALL_OPTS.put("cost", Getopt.CONTRNT_I);
         ALL_OPTS.put("landvalue", Getopt.CONTRNT_I);
         ALL_OPTS.put("renovation", Getopt.CONTRNT_I);
@@ -670,7 +682,7 @@ public class DBImpl implements DBIfc
             if (CREATEAC.equalsIgnoreCase(action))
             {
 
-                dbi.createBankAccount(argHash.get("name"));
+                dbi.createBankAccount(argHash.get("name"), argHash.get("bank"));
                 for (BankAccount ba : dbi.accountsMap.values())
                 {
                     System.out.println(ba);
@@ -681,11 +693,12 @@ public class DBImpl implements DBIfc
                 {
                     usage("-file argument is required.");
                 }
-                List<String> acL = parseAccountFile(argHash.get("file"));
-                for (String ac : acL)
+
+                List<BankAccount> acL = parseAccountFile(argHash.get("file"));
+                for (BankAccount ac : acL)
                 {
-                    if (!dbi.accountsMap.containsKey(ac))
-                        dbi.createBankAccount(ac);
+                    if (!dbi.accountsMap.containsKey(ac.getName()))
+                        dbi.createBankAccount(ac.getName(), ac.getBankName());
                 }
                 for (BankAccount ba : dbi.accountsMap.values())
                 {
@@ -705,15 +718,16 @@ public class DBImpl implements DBIfc
                 {
                     usage("-file argument is required.");
                 }
-                List<String> acL = parseAccountFile(argHash.get("file"));
-                for (String ac : acL)
+                List<BankAccount> acL = parseAccountFile(argHash.get("file"));
+                for (BankAccount ac : acL)
                 {
-                    dbi.deleteBankAccount(ac);
+                    dbi.deleteBankAccount(ac.getName());
                 }
                 for (BankAccount ba : dbi.accountsMap.values())
                 {
                     System.out.println(ba);
                 }
+
             } else if (CREATEPROP.equalsIgnoreCase(action))
             {
                 if (argHash.get("name") == null || argHash.get("cost") == null || argHash.get("purchasedate") == null)
