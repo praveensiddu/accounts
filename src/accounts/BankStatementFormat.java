@@ -71,6 +71,11 @@ public class BankStatementFormat
             file = System.getProperty("ACCOUNTSDB") + File.separator + "config" + File.separator + bankName
                     + "_statement_format.txt";
         }
+        File f = new File(file);
+        if (!f.exists())
+        {
+            throw new IOException("The file defining the bank statement format is missing at this location" + file);
+        }
         final FileReader fr = new FileReader(file);
         final BufferedReader br = new BufferedReader(fr);
         try

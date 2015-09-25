@@ -49,14 +49,17 @@ public class DBImpl implements DBIfc
 
         }
         File fmtFile = new File(configDir + File.separator + "bbt_statement_format.txt");
-        Files.copy(new File(getClass().getResource("/accounts/resources/bbt_statement_format.txt").getFile()).toPath(),
-                fmtFile.toPath());
+        if (!fmtFile.exists())
+            Files.copy(new File(getClass().getResource("/accounts/resources/bbt_statement_format.txt").getFile()).toPath(),
+                    fmtFile.toPath());
         fmtFile = new File(configDir + File.separator + "dcu_statement_format.txt");
-        Files.copy(new File(getClass().getResource("/accounts/resources/dcu_statement_format.txt").getFile()).toPath(),
-                fmtFile.toPath());
+        if (!fmtFile.exists())
+            Files.copy(new File(getClass().getResource("/accounts/resources/dcu_statement_format.txt").getFile()).toPath(),
+                    fmtFile.toPath());
         fmtFile = new File(configDir + File.separator + "wellsfargo_statement_format.txt");
-        Files.copy(new File(getClass().getResource("/accounts/resources/wellsfargo_statement_format.txt").getFile()).toPath(),
-                fmtFile.toPath());
+        if (!fmtFile.exists())
+            Files.copy(new File(getClass().getResource("/accounts/resources/wellsfargo_statement_format.txt").getFile()).toPath(),
+                    fmtFile.toPath());
 
     }
 
