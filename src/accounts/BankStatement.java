@@ -15,30 +15,39 @@ import accounts.db.TRId;
 
 public class BankStatement
 {
-    private BankConfig            bc            = null;
-    private BankAccount           bankAccount   = null;
-    private DBIfc                 dbIfc;
+    private BankStatementFormat bc          = null;
+    private BankAccount         bankAccount = null;
+    private DBIfc               dbIfc;
 
-    private Map<TRId, TR>         trs           = new HashMap<TRId, TR>();
+    private Map<TRId, TR> trs = new HashMap<TRId, TR>();
 
     private final Map<String, TR> mkUniqDescMap = new HashMap<String, TR>();
 
-    public BankStatement(final String filename, final String bankConfig, String accountName) throws IOException, DBException
+    public BankStatement(final String filename, String accountName, final String bankStFormat) throws IOException, DBException
     {
         dbIfc = DBFactory.createDBIfc();
 
-        dbIfc.createAndConnectDB(null);
         if (accountName == null)
         {
-            throw new IOException("Account is not present: " + accountName);
+            throw new IOException("Account name is null: " + accountName);
+        }
+        if (filename == null)
+        {
+            throw new IOException("Statement file name is null: " + filename);
         }
         accountName = accountName.toLowerCase().trim();
+        dbIfc.createAndConnectDB(null);
         if (!dbIfc.getAccounts().containsKey(accountName))
         {
             throw new IOException("Account is not present: " + accountName + ", List=" + dbIfc.getAccounts().keySet());
         }
         bankAccount = dbIfc.getAccounts().get(accountName);
-        bc = new BankConfig(bankConfig);
+        if (bankAccount.getBankName() == null || bankAccount.getBankName().isEmpty())
+        {
+            throw new IOException(
+                    "Bank name is not set for: " + accountName + ". Please delete and recreate the account with bank name");
+        }
+        bc = new BankStatementFormat(bankAccount.getBankName(), bankStFormat);
 
         final FileReader fr = new FileReader(filename);
         final BufferedReader br = new BufferedReader(fr);
@@ -165,17 +174,18 @@ public class BankStatement
             System.out.println(err);
         }
         System.out.println("Usage: -A action options\n");
-        System.out.println("    -A parse -bankstatement <csvfile> -bankconfig <file> -accountname <n>\n");
+        System.out.println("    -A parse -bankstatement <csvfile> -accountname <n> [-bankstformat <file>] \n");
         System.exit(1);
     }
 
     public static final String              PARSE    = "parse";
     public static final Map<String, String> ALL_OPTS = new HashMap<String, String>();
+
     static
     {
         ALL_OPTS.put("A", Getopt.CONTRNT_S);
         ALL_OPTS.put("bankstatement", Getopt.CONTRNT_S);
-        ALL_OPTS.put("bankconfig", Getopt.CONTRNT_S);
+        ALL_OPTS.put("bankstformat", Getopt.CONTRNT_S);
         ALL_OPTS.put("accountname", Getopt.CONTRNT_S);
     }
 
@@ -193,8 +203,8 @@ public class BankStatement
         {
             if (PARSE.equalsIgnoreCase(action))
             {
-                final BankStatement bs = new BankStatement(argHash.get("bankstatement"), argHash.get("bankconfig"),
-                        argHash.get("accountname"));
+                final BankStatement bs = new BankStatement(argHash.get("bankstatement"), argHash.get("accountname"),
+                        argHash.get("bankstformat"));
                 System.out.println("" + bs);
 
             } else

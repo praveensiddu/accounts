@@ -487,9 +487,10 @@ public class AccountsMainApp
         System.out.println("    -A DELETEPROPS -file <f>\n");
         System.out.println("    -A creategroups -file <f>");
         System.out.println("    -A deletegroups -file <f>\n");
-        System.out.println("    -A parse -bankstatement <csvfile> -bankconfig <file> -accountname <n>\n");
-        System.out.println("    -A parseandclassify -bankstatement <csvfile> -bankconfig <f> -accountname <n> -taxconfig <f>\n");
-        System.out.println("    -A import2db -bankstatement <csvfile> -bankconfig <f> -accountname <n>\n");
+        System.out.println("    -A parse -bankstatement <csvfile> -accountname <n> [-bankstformat <f>]\n");
+        System.out.println(
+                "    -A parseandclassify -bankstatement <csvfile> -accountname <n> -taxconfig <f> [-bankstformat <f> ]\n");
+        System.out.println("    -A import2db -bankstatement <csvfile> -accountname <n>\n");
         System.out.println("    -A classifyindb -taxconfig <f> -year <yyyy>\n");
         System.out.println("    -A exporttr -accountname <n> -file <f.csv>\n");
         System.out.println("    -A importtr -accountname <n> -file <f.csv>\n");
@@ -515,7 +516,7 @@ public class AccountsMainApp
     {
         ALL_OPTS.put("A", Getopt.CONTRNT_S);
         ALL_OPTS.put("bankstatement", Getopt.CONTRNT_S);
-        ALL_OPTS.put("bankconfig", Getopt.CONTRNT_S);
+        ALL_OPTS.put("bankstformat", Getopt.CONTRNT_S);
         ALL_OPTS.put("accountname", Getopt.CONTRNT_S);
         ALL_OPTS.put("taxconfig", Getopt.CONTRNT_S);
         ALL_OPTS.put("year", Getopt.CONTRNT_I);
@@ -547,7 +548,7 @@ public class AccountsMainApp
                 {
                     if (dbi.getAccounts() != null && dbi.getAccounts().containsKey(ac.getName()))
                     {
-                        System.out.println("Account is already present=" + ac);
+                        System.out.println("Account is already present=" + ac.getName());
                     } else
                     {
                         dbi.createBankAccount(ac.getName(), ac.getBankName());
@@ -642,20 +643,20 @@ public class AccountsMainApp
                 }
             } else if (PARSE.equalsIgnoreCase(action))
             {
-                final BankStatement bs = new BankStatement(argHash.get("bankstatement"), argHash.get("bankconfig"),
-                        argHash.get("accountname"));
+                final BankStatement bs = new BankStatement(argHash.get("bankstatement"), argHash.get("accountname"),
+                        argHash.get("bankstformat"));
                 System.out.println("" + bs);
 
             } else if (IMPORT2DB.equalsIgnoreCase(action))
             {
-                final BankStatement bs = new BankStatement(argHash.get("bankstatement"), argHash.get("bankconfig"),
-                        argHash.get("accountname"));
+                final BankStatement bs = new BankStatement(argHash.get("bankstatement"), argHash.get("accountname"),
+                        argHash.get("bankstformat"));
 
                 commit(bs);
             } else if (PARSEANDCLASSIFY.equalsIgnoreCase(action))
             {
-                final BankStatement bs = new BankStatement(argHash.get("bankstatement"), argHash.get("bankconfig"),
-                        argHash.get("accountname"));
+                final BankStatement bs = new BankStatement(argHash.get("bankstatement"), argHash.get("accountname"),
+                        argHash.get("bankstformat"));
                 final TaxConfig tc = new TaxConfig(argHash.get("taxconfig"));
                 classify(bs, tc);
                 System.out.println("" + bs.toString(true));

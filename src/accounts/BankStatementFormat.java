@@ -1,26 +1,38 @@
 package accounts;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BankConfig
+public class BankStatementFormat
 {
     public static final String IGNORE_LINES_STARTSWITH = "ignore_lines_startswith";
     public static final String IGNORE_LINES_CONTAINS   = "ignore_lines_contains";
 
-    public static final String DATE_COl                = "date_col";
-    public static final String DESCRIPTION_COL         = "description_col";
-    public static final String MEMO_COL                = "memo_col";
-    public static final String AMOUNT_DEBIT_COL        = "amount_debit_col";
-    public static final String AMOUNT_CREDIT_COL       = "amount_credit_col";
-    public static final String CHECK_NUMBER_COL        = "check_number_col";
-    public static final String FEES_COL                = "fees_col";
-    public static final String DATE_FORMAT             = "date_format";
+    public static final String DATE_COl          = "date_col";
+    public static final String DESCRIPTION_COL   = "description_col";
+    public static final String MEMO_COL          = "memo_col";
+    public static final String AMOUNT_DEBIT_COL  = "amount_debit_col";
+    public static final String AMOUNT_CREDIT_COL = "amount_credit_col";
+    public static final String CHECK_NUMBER_COL  = "check_number_col";
+    public static final String FEES_COL          = "fees_col";
+    public static final String DATE_FORMAT       = "date_format";
 
-    private List<String>       ignLineStartsWith       = new ArrayList<String>();
+    private List<String> ignLineStartsWith = new ArrayList<String>();
+
+    private List<String> ignLineContains = new ArrayList<String>();
+
+    private int    dateIndex    = -1;
+    private int    descIndex    = -1;
+    private int    memoIndex    = -1;
+    private int    debitIndex   = -1;
+    private int    creditIndex  = -1;
+    private int    checkNoIndex = -1;
+    private int    feesIndex    = -1;
+    private String dateFormat;
 
     public List<String> getIgnLineStartsWith()
     {
@@ -32,8 +44,6 @@ public class BankConfig
         this.ignLineStartsWith = ignLineStartsWith;
     }
 
-    private List<String> ignLineContains = new ArrayList<String>();
-
     public List<String> getIgnLineContains()
     {
         return ignLineContains;
@@ -44,17 +54,23 @@ public class BankConfig
         this.ignLineContains = ignLineContains;
     }
 
-    private int    dateIndex    = -1;
-    private int    descIndex    = -1;
-    private int    memoIndex    = -1;
-    private int    debitIndex   = -1;
-    private int    creditIndex  = -1;
-    private int    checkNoIndex = -1;
-    private int    feesIndex    = -1;
-    private String dateFormat;
-
-    public BankConfig(final String file) throws IOException
+    public BankStatementFormat(String bankName, String file) throws IOException
     {
+        if (file == null)
+        {
+            if (bankName == null || bankName.isEmpty())
+            {
+                throw new IOException("Bank name is empty");
+            }
+            bankName = bankName.toLowerCase();
+            if (System.getProperty("ACCOUNTSDB") == null)
+            {
+                throw new IOException(
+                        "Set Java system property ACCOUNTSDB to directory where accounts repository is present or to be created");
+            }
+            file = System.getProperty("ACCOUNTSDB") + File.separator + "config" + File.separator + bankName
+                    + "_statement_format.txt";
+        }
         final FileReader fr = new FileReader(file);
         final BufferedReader br = new BufferedReader(fr);
         try
@@ -207,13 +223,17 @@ public class BankConfig
     {
         try
         {
-            final BankConfig bc = new BankConfig(args[0]);
+            String file = null;
+            if (args.length > 0)
+            {
+                file = args[0];
+            }
+            final BankStatementFormat bc = new BankStatementFormat("dcu", file);
         } catch (final IOException e)
         {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
     }
 
 }

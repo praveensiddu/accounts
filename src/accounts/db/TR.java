@@ -17,7 +17,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
-import accounts.BankConfig;
+import accounts.BankStatementFormat;
 
 @Entity
 @IdClass(TRId.class)
@@ -251,7 +251,7 @@ public abstract class TR
         }
     }
 
-    public void init(String line, final BankConfig bc) throws IOException
+    public void init(String line, final BankStatementFormat bc) throws IOException
     {
         line = line.toLowerCase().trim();
         if (line.isEmpty())

@@ -1,0 +1,8 @@
+#Specify the lines to ignore
+IGNORE_LINES_CONTAINS=Transaction Type
+
+DATE_FORMAT=M/d/yyyy
+DATE_COL=1
+DESCRIPTION_COL=4
+AMOUNT_DEBIT_COL=5
+CHECK_NUMBER_COL=3

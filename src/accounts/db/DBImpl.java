@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -26,6 +28,39 @@ public class DBImpl implements DBIfc
     private Map<String, RealProperty> propertiesMap;
     private Map<String, IGroup>       groupsMap;
 
+    private void createOtherDirectories(String dir) throws IOException
+    {
+
+        File d = new File(dir);
+        if (!d.exists())
+        {
+            throw new IOException("Directory not present=" + dir);
+        }
+        String configDir = dir + File.separator + "config/";
+        File configDirFile = new File(configDir);
+        configDirFile.mkdir();
+        if (!configDirFile.exists())
+        {
+            throw new IOException("Unable to create directory=" + configDir);
+        }
+        if (getClass().getResource("/accounts/resources/bbt_statement_format.txt") == null)
+        {
+            throw new IOException(
+                    "Internal error. Unable to find resource in package=" + "/accounts/resources/bbt_statement_format.txt");
+
+        }
+        File fmtFile = new File(configDir + File.separator + "bbt_statement_format.txt");
+        Files.copy(new File(getClass().getResource("/accounts/resources/bbt_statement_format.txt").getFile()).toPath(),
+                fmtFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        fmtFile = new File(configDir + File.separator + "dcu_statement_format.txt");
+        Files.copy(new File(getClass().getResource("/accounts/resources/dcu_statement_format.txt").getFile()).toPath(),
+                fmtFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        fmtFile = new File(configDir + File.separator + "wellsfargo_statement_format.txt");
+        Files.copy(new File(getClass().getResource("/accounts/resources/wellsfargo_statement_format.txt").getFile()).toPath(),
+                fmtFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+    }
+
     @Override
     public void createAndConnectDB(String dir) throws IOException
     {
@@ -36,13 +71,18 @@ public class DBImpl implements DBIfc
                 if (System.getProperty("ACCOUNTSDB") == null)
                 {
                     throw new IOException(
-                            "Set Java system property ACCOUNTSDB to directory where accounts DB is present or to be created");
+                            "Set Java system property ACCOUNTSDB to directory where accounts repository is present or to be created");
                 } else
                 {
                     dir = System.getProperty("ACCOUNTSDB");
                 }
             }
             File d = new File(dir);
+            if (!d.exists())
+            {
+                throw new IOException("Directory not present=" + dir);
+            }
+
             Map<String, String> properties = new HashMap<String, String>();
             properties.put("javax.persistence.jdbc.url",
                     "jdbc:derby:" + d.getCanonicalPath().replace("\\", "/") + "/taxdb;create=true");
@@ -50,6 +90,8 @@ public class DBImpl implements DBIfc
             // creates tables if it does not exist
             EntityManager em = factory.createEntityManager();
             em.close();
+
+            createOtherDirectories(dir);
         }
         EntityManager em = factory.createEntityManager();
         List<BankAccount> acList = em.createNamedQuery("BankAccount.getList", BankAccount.class).getResultList();
