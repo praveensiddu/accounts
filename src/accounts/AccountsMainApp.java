@@ -27,6 +27,39 @@ public class AccountsMainApp
 {
     private BankAccount bankAccount = null;
 
+    public static final String               RENT             = "rent";
+    public static final String               COMMISSIONS      = "commissions";
+    public static final String               INSURANCE        = "insurance";
+    public static final String               PROFESSIONALFEES = "professionalfees";
+    public static final String               MORTGAGEINTEREST = "mortgageinterest";
+    public static final String               REPAIRS          = "repairs";
+    public static final String               TAX              = "tax";
+    public static final String               UTILITIES        = "utilities";
+    public static final String               DEPRECIATION     = "depreciation";
+    public static final String               HOA              = "hoa";
+    public static final String               PROFIT           = "profit";
+    public static final String               OTHER            = "other";
+    public static final Map<String, Integer> scheduleEMap;
+    public static final String[]             scheduleEAry     = { null, null, null, RENT, null, null, null, null, COMMISSIONS,
+            INSURANCE, PROFESSIONALFEES, null, MORTGAGEINTEREST, null, REPAIRS, null, TAX, UTILITIES, DEPRECIATION, HOA, OTHER };
+
+    static
+    {
+        scheduleEMap = new HashMap<String, Integer>();
+        scheduleEMap.put(RENT, 3);
+        scheduleEMap.put(COMMISSIONS, 8);
+        scheduleEMap.put(INSURANCE, 9);
+        scheduleEMap.put(PROFESSIONALFEES, 10);
+        scheduleEMap.put(MORTGAGEINTEREST, 12);
+        scheduleEMap.put(REPAIRS, 14);
+        scheduleEMap.put(TAX, 16);
+        scheduleEMap.put(UTILITIES, 17);
+        scheduleEMap.put(DEPRECIATION, 18);
+        scheduleEMap.put(HOA, 19);
+        scheduleEMap.put(OTHER, 20);
+
+    }
+
     private static Map<String, Float> trTypeTotal(final ArrayList<TR> art)
     {
         final Map<String, Float> map = new HashMap<String, Float>();
@@ -122,39 +155,6 @@ public class AccountsMainApp
                 }
             }
         }
-    }
-
-    public static final String               RENT             = "rent";
-    public static final String               COMMISSIONS      = "commissions";
-    public static final String               INSURANCE        = "insurance";
-    public static final String               PROFESSIONALFEES = "professionalfees";
-    public static final String               MORTGAGEINTEREST = "mortgageinterest";
-    public static final String               REPAIRS          = "repairs";
-    public static final String               TAX              = "tax";
-    public static final String               UTILITIES        = "utilities";
-    public static final String               DEPRECIATION     = "depreciation";
-    public static final String               HOA              = "hoa";
-    public static final String               PROFIT           = "profit";
-    public static final String               OTHER            = "other";
-    public static final Map<String, Integer> scheduleEMap;
-    public static final String[]             scheduleEAry     = { null, null, null, RENT, null, null, null, null, COMMISSIONS,
-            INSURANCE, PROFESSIONALFEES, null, MORTGAGEINTEREST, null, REPAIRS, null, TAX, UTILITIES, DEPRECIATION, HOA, OTHER };
-
-    static
-    {
-        scheduleEMap = new HashMap<String, Integer>();
-        scheduleEMap.put(RENT, 3);
-        scheduleEMap.put(COMMISSIONS, 8);
-        scheduleEMap.put(INSURANCE, 9);
-        scheduleEMap.put(PROFESSIONALFEES, 10);
-        scheduleEMap.put(MORTGAGEINTEREST, 12);
-        scheduleEMap.put(REPAIRS, 14);
-        scheduleEMap.put(TAX, 16);
-        scheduleEMap.put(UTILITIES, 17);
-        scheduleEMap.put(DEPRECIATION, 18);
-        scheduleEMap.put(HOA, 19);
-        scheduleEMap.put(OTHER, 20);
-
     }
 
     private static StringBuffer reportFromPropMap(final Map<String, ArrayList<TR>> propTrMap,
@@ -397,6 +397,10 @@ public class AccountsMainApp
             Map<TRId, TR> trMap = dbIfc.getTransactions(ba.getTrTableId());
 
             final ArrayList<RuleRecord> arr = tc.getAccountsMap().get(ba.getName());
+            if (arr == null)
+            {
+                continue;
+            }
             for (final TR tr : trMap.values())
             {
                 for (final RuleRecord rr : arr)
@@ -665,6 +669,14 @@ public class AccountsMainApp
 
             } else if (CLASSIFYINDB.equalsIgnoreCase(action))
             {
+                if (argHash.get("taxconfig") == null)
+                {
+                    usage("-taxconfig argument is required.");
+                }
+                if (argHash.get("year") == null)
+                {
+                    usage("-year argument is required.");
+                }
                 final TaxConfig tc = new TaxConfig(argHash.get("taxconfig"));
                 DBIfc dbIfc = classifyindb(tc);
                 StringBuffer sb = report(new Integer(argHash.get("year")).intValue(), dbIfc);
