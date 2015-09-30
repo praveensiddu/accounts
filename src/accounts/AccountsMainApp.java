@@ -1,6 +1,7 @@
 package accounts;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -37,6 +38,7 @@ public class AccountsMainApp
     public static final String               UTILITIES        = "utilities";
     public static final String               DEPRECIATION     = "depreciation";
     public static final String               HOA              = "hoa";
+    public static final String               BANKFEES         = "bankfees";
     public static final String               PROFIT           = "profit";
     public static final String               OTHER            = "other";
     public static final Map<String, Integer> scheduleEMap;
@@ -65,13 +67,13 @@ public class AccountsMainApp
         final Map<String, Float> map = new HashMap<String, Float>();
         for (final TR tr : art)
         {
-            if (!map.containsKey(tr.getIncomeType()))
+            if (!map.containsKey(tr.getTrType()))
             {
-                map.put(tr.getIncomeType(), tr.getDebit());
+                map.put(tr.getTrType(), tr.getDebit());
                 continue;
             }
-            final Float f = map.get(tr.getIncomeType()) + tr.getDebit();
-            map.put(tr.getIncomeType(), f);
+            final Float f = map.get(tr.getTrType()) + tr.getDebit();
+            map.put(tr.getTrType(), f);
         }
         return map;
 
@@ -250,11 +252,11 @@ public class AccountsMainApp
             }
             float other = 0;
 
-            if (trTypeMap.containsKey("bankfees"))
+            if (trTypeMap.containsKey(BANKFEES))
             {
                 // include everything else in the other category
-                other = (trTypeMap.get("bankfees") / ownerCount);
-                totalExpense += (trTypeMap.get("bankfees") / ownerCount);
+                other = (trTypeMap.get(BANKFEES) / ownerCount);
+                totalExpense += (trTypeMap.get(BANKFEES) / ownerCount);
             }
             if (trTypeMap.containsKey(HOA))
             {
@@ -277,7 +279,7 @@ public class AccountsMainApp
 
             for (final String key1 : trTypeMap.keySet())
             {
-                if (!scheduleEMap.containsKey(key1) && !"bankfees".equals(key1))
+                if (!scheduleEMap.containsKey(key1) && !BANKFEES.equals(key1))
                 {
                     sbUnown.append("        " + key1 + "=" + trTypeMap.get(key1) + "\n");
                 }
@@ -303,22 +305,9 @@ public class AccountsMainApp
 
     }
 
-    private static void importtr(String file, String accountName) throws DBException, IOException
+    public static Map<TRId, TR> readTransactions(DBIfc dbIfc, BankAccount ba, String file) throws IOException, DBException,
+                                                                                           ParseException
     {
-        DBIfc dbIfc = DBFactory.createDBIfc();
-        dbIfc.createAndConnectDB(null);
-
-        if (accountName == null)
-        {
-            throw new IOException("Account is not present: " + accountName);
-        }
-        accountName = accountName.toLowerCase().trim();
-        if (!dbIfc.getAccounts().containsKey(accountName))
-        {
-            throw new IOException("Account is not present: " + accountName + ", List=" + dbIfc.getAccounts().keySet());
-        }
-        BankAccount bankAccount = dbIfc.getAccounts().get(accountName);
-
         final FileReader fr = new FileReader(file);
         final BufferedReader br = new BufferedReader(fr);
         try
@@ -335,13 +324,13 @@ public class AccountsMainApp
                 {
                     continue;
                 }
-                TR tr = dbIfc.createCorrespondingTRObj(bankAccount);
+                TR tr = dbIfc.createCorrespondingTRObj(ba);
 
                 tr.importLine(line);
                 // TODO user may have messed up the description.
                 trs.put(tr.getTrId(), tr);
             }
-            int count = dbIfc.updateTransactions(trs);
+            return trs;
         } finally
         {
             if (br != null)
@@ -357,38 +346,111 @@ public class AccountsMainApp
         }
     }
 
-    private static void exporttr(String file, String accountName) throws DBException, IOException
+    private static void importtr(String accountName, String file) throws DBException, IOException, ParseException
+    {
+        DBIfc dbIfc = DBFactory.createDBIfc();
+        dbIfc.createAndConnectDB(null);
+        if (accountName == null && file != null)
+        {
+            throw new IOException("Account cannot be null when file name is specified.");
+        }
+        if (accountName != null)
+        {
+            accountName = accountName.toLowerCase().trim();
+            if (!dbIfc.getAccounts().containsKey(accountName))
+            {
+                throw new IOException("Account is not present: " + accountName + ", List=" + dbIfc.getAccounts().keySet());
+            }
+        }
+        for (BankAccount ba : dbIfc.getAccounts().values())
+        {
+            if (accountName != null && !ba.getName().equalsIgnoreCase(accountName))
+            {
+                continue;
+            }
+
+            String outfile = null;
+            if (file == null)
+            {
+                String dir = System.getProperty("ACCOUNTSDB") + File.separator + "exporttr";
+                File dirFile = new File(dir);
+                if (!dirFile.isDirectory())
+                {
+                    dirFile.mkdir();
+                }
+                outfile = dir + File.separator + "export_" + ba.getName() + ".csv";
+            } else
+            {
+                outfile = file;
+                if (!outfile.endsWith(".csv"))
+                {
+                    outfile += ".csv";
+                }
+            }
+            System.out.println("Reading transactions for " + ba.getName());
+            Map<TRId, TR> trs = readTransactions(dbIfc, ba, outfile);
+            int count = dbIfc.updateTransactions(trs);
+            System.out.println("Updated transactions for " + ba.getName() + ", Count=" + count);
+        }
+
+    }
+
+    private static void exporttr(String accountName, String file) throws DBException, IOException
     {
         DBIfc dbIfc = DBFactory.createDBIfc();
 
         dbIfc.createAndConnectDB(null);
 
-        if (accountName == null)
+        if (accountName == null && file != null)
         {
-            throw new IOException("Account is not present: " + accountName);
+            throw new IOException("Account cannot be null when file name is specified ");
         }
-        accountName = accountName.toLowerCase().trim();
-        if (!dbIfc.getAccounts().containsKey(accountName))
+        if (accountName != null)
         {
-            throw new IOException("Account is not present: " + accountName + ", List=" + dbIfc.getAccounts().keySet());
+            accountName = accountName.toLowerCase().trim();
+            if (!dbIfc.getAccounts().containsKey(accountName))
+            {
+                throw new IOException("Account is not present: " + accountName + ", List=" + dbIfc.getAccounts().keySet());
+            }
         }
-        BankAccount ba = dbIfc.getAccounts().get(accountName);
-        Map<TRId, TR> trMap = dbIfc.getTransactions(ba.getTrTableId());
-        StringBuffer sb = new StringBuffer();
-        sb.append("#DATE,DESCRIPTION,DEBIT,COMMENT,ISLOCKED,INCOMETYPE,TAXCATEGORY,PROPERTY\n");
-        for (final TR tr : trMap.values())
+        for (BankAccount ba : dbIfc.getAccounts().values())
         {
-            sb.append(new SimpleDateFormat("MM-dd-yyyy").format(tr.getDate()) + "," + tr.getDescription() + "," + tr.getDebit()
-                    + "," + tr.getComment() + "," + tr.isLocked() + "," + tr.getIncomeType() + "," + tr.getTaxCategory() + ","
-                    + tr.getProperty() + "\n");
+            if (accountName != null && !ba.getName().equalsIgnoreCase(accountName))
+            {
+                continue;
+            }
+
+            Map<TRId, TR> trMap = dbIfc.getTransactions(ba.getTrTableId());
+            StringBuffer sb = new StringBuffer();
+            sb.append("#DATE,DESCRIPTION,DEBIT,COMMENT,ISLOCKED,TRTYPE,TAXCATEGORY,PROPERTY\n");
+            for (final TR tr : trMap.values())
+            {
+                sb.append(new SimpleDateFormat("MM-dd-yyyy").format(tr.getDate()) + "," + tr.getDescription() + ","
+                        + tr.getDebit() + "," + tr.getComment() + "," + tr.isLocked() + "," + tr.getTrType() + ","
+                        + tr.getTaxCategory() + "," + tr.getProperty() + "\n");
+            }
+            String outfile = null;
+            if (file == null)
+            {
+                String dir = System.getProperty("ACCOUNTSDB") + File.separator + "exporttr";
+                File dirFile = new File(dir);
+                if (!dirFile.isDirectory())
+                {
+                    dirFile.mkdir();
+                }
+                outfile = dir + File.separator + "export_" + ba.getName() + ".csv";
+            } else
+            {
+                outfile = file;
+                if (!outfile.endsWith(".csv"))
+                {
+                    outfile += ".csv";
+                }
+            }
+            PrintWriter out = new PrintWriter(outfile);
+            out.println(sb);
+            out.close();
         }
-        if (!file.endsWith(".csv"))
-        {
-            file += ".csv";
-        }
-        PrintWriter out = new PrintWriter(file);
-        out.println(sb);
-        out.close();
     }
 
     private static DBIfc classifyindb(final TaxConfig tc) throws DBException, IOException
@@ -415,7 +477,7 @@ public class AccountsMainApp
                         {
                             tr.setProperty(rr.getProperty());
                             tr.setTaxCategory(rr.getTaxCategory());
-                            tr.setIncomeType(rr.getTrType());
+                            tr.setTrType(rr.getTrType());
                             break;
                         }
                     } else if (rr.getDescStartsWith() != null)
@@ -424,7 +486,7 @@ public class AccountsMainApp
                         {
                             tr.setProperty(rr.getProperty());
                             tr.setTaxCategory(rr.getTaxCategory());
-                            tr.setIncomeType(rr.getTrType());
+                            tr.setTrType(rr.getTrType());
                             break;
                         }
                     }
@@ -455,7 +517,7 @@ public class AccountsMainApp
                         {
                             tr.setProperty(rr.getProperty());
                             tr.setTaxCategory(rr.getTaxCategory());
-                            tr.setIncomeType(rr.getTrType());
+                            tr.setTrType(rr.getTrType());
                             break;
                         }
                     } else if (rr.getDescStartsWith() != null)
@@ -464,7 +526,7 @@ public class AccountsMainApp
                         {
                             tr.setProperty(rr.getProperty());
                             tr.setTaxCategory(rr.getTaxCategory());
-                            tr.setIncomeType(rr.getTrType());
+                            tr.setTrType(rr.getTrType());
                             break;
                         }
                     }
@@ -502,8 +564,8 @@ public class AccountsMainApp
                 "    -A parseandclassify -bankstatement <csvfile> -accountname <n> -taxconfig <f> [-bankstformat <f> ]\n");
         System.out.println("    -A import2db -bankstatement <csvfile> -accountname <n>\n");
         System.out.println("    -A classifyindb -taxconfig <f> -year <yyyy>\n");
-        System.out.println("    -A exporttr -accountname <n> -file <f.csv>\n");
-        System.out.println("    -A importtr -accountname <n> -file <f.csv>\n");
+        System.out.println("    -A exporttr [-accountname <n>] [-file <f.csv>]\n");
+        System.out.println("    -A importtr [-accountname <n>] [-file <f.csv>]\n");
         System.exit(1);
     }
 
@@ -725,27 +787,11 @@ public class AccountsMainApp
 
             } else if (EXPORTTR.equalsIgnoreCase(action))
             {
-                if (argHash.get("file") == null)
-                {
-                    usage("csv file is required as argument.");
-                }
-                if (argHash.get("accountname") == null)
-                {
-                    usage("accountname is required as argument.");
-                }
-                exporttr(argHash.get("file"), argHash.get("accountname"));
+                exporttr(argHash.get("accountname"), argHash.get("file"));
 
             } else if (IMPORTTR.equalsIgnoreCase(action))
             {
-                if (argHash.get("file") == null || !argHash.get("file").endsWith("csv"))
-                {
-                    usage("csv file is required as argument.");
-                }
-                if (argHash.get("accountname") == null)
-                {
-                    usage("accountname is required as argument.");
-                }
-                importtr(argHash.get("file"), argHash.get("accountname"));
+                importtr(argHash.get("accountname"), argHash.get("file"));
 
             } else
             {

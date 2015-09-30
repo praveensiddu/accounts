@@ -3,6 +3,7 @@ package accounts;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,7 +24,8 @@ public class BankStatement
 
     private final Map<String, TR> mkUniqDescMap = new HashMap<String, TR>();
 
-    public BankStatement(final String filename, String accountName, final String bankStFormat) throws IOException, DBException
+    public BankStatement(final String filename, String accountName, final String bankStFormat)
+            throws IOException, DBException, ParseException
     {
         dbIfc = DBFactory.createDBIfc();
 
@@ -120,17 +122,19 @@ public class BankStatement
         String key2 = "" + tr.getDate();
         if (tr.getDescription() != null)
         {
-            key2 += ", DESC=" + tr.getDescription();
+            key2 += ": DESC=" + tr.getDescription();
         }
         if (mkUniqDescMap.containsKey(key2))
         {
             String key1 = key2;
             int i = 1;
+            String suffix = "";
             for (; mkUniqDescMap.containsKey(key1); i++)
             {
-                key1 = key2 + ", MKUNIQ" + i;
+                suffix = ": mkuniq" + i;
+                key1 = key2 + suffix;
             }
-            tr.setDescription(tr.getDescription() + ", MKUNIQ" + i);
+            tr.setDescription(tr.getDescription() + suffix);
             mkUniqDescMap.put(key1, tr);
         } else
         {
@@ -211,7 +215,7 @@ public class BankStatement
             {
                 usage("Invalid action");
             }
-        } catch (IOException | DBException e)
+        } catch (IOException | DBException | ParseException e)
         {
             // TODO Auto-generated catch block
             e.printStackTrace();

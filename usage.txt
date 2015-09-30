@@ -1,0 +1,3 @@
+-A listacs -file D:\tmp\AccountsDB\acexp.csv -accountname junk  -bankstatement C:\Users\myfirstname\workspace\accounts\data\ElegantHomes_2014.CSV -taxconfig data/TaxConfigCalvaryBattery.txt -year 2014
+
+

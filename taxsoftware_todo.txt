@@ -1,10 +1,13 @@
-portfolio location configurable
+check and proceed for import2db
+check and proceed for importtr
+
+
 rent calculation
 mortgage interest 
 insurance
 closing cost check with Chunilal
 
-Check with Cheema on closing cost
+Check with Chunilal on closing cost
 delete a transaction
 weepingwillow
 validate the format of bank statement to make sure it is from the right bank

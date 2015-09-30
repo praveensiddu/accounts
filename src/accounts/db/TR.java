@@ -1,9 +1,12 @@
 package accounts.db;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
 
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
@@ -38,31 +41,31 @@ public abstract class TR
     }
 
     @Id
-    @AttributeOverrides({ @AttributeOverride(name = "date", column = @Column(name = "DATE")),
-            @AttributeOverride(name = "description", column = @Column(name = "DESCRIPTION")),
-            @AttributeOverride(name = "debit", column = @Column(name = "DEBIT")) })
+    @AttributeOverrides({ @AttributeOverride(name = "date", column = @Column(name = "DATE") ),
+            @AttributeOverride(name = "description", column = @Column(name = "DESCRIPTION") ),
+            @AttributeOverride(name = "debit", column = @Column(name = "DEBIT") ) })
     @Temporal(TemporalType.DATE)
-    private Date    date;
+    private Date date;
 
     @Id
-    private String  description;
+    private String description;
     @Column(length = 100)
-    private String  comment;
+    private String comment;
 
     @Id
     private float   debit;
     private boolean locked;
 
     @Column(length = 20)
-    private String  incomeType;
+    private String trType;
     @Column(length = 25)
-    private String  taxCategory;
+    private String taxCategory;
     @Column(length = 50)
-    private String  property;
+    private String property;
 
     public void copyNonPrimaryFields(TR tr)
     {
-        setIncomeType(tr.getIncomeType());
+        setTrType(tr.getTrType());
         setTaxCategory(tr.getTaxCategory());
         setProperty(tr.getProperty());
         setComment(tr.getComment());
@@ -91,16 +94,16 @@ public abstract class TR
 
     }
 
-    public String getIncomeType()
+    public String getTrType()
     {
-        return incomeType;
+        return trType;
     }
 
-    public void setIncomeType(final String incomeType)
+    public void setTrType(final String trType)
     {
-        if (incomeType == null)
+        if (trType == null)
             return;
-        this.incomeType = incomeType.trim().toLowerCase();
+        this.trType = trType.trim().toLowerCase();
     }
 
     public String getTaxCategory()
@@ -192,7 +195,7 @@ public abstract class TR
         return new Float(floatStr).floatValue();
     }
 
-    public void importLine(String line) throws IOException
+    public void importLine(String line) throws IOException, ParseException
     {
 
         line = line.toLowerCase().trim();
@@ -202,12 +205,17 @@ public abstract class TR
         }
         String[] fields = line.split(",");
         fields = approxCsvCorrection(fields);
-        if (fields.length != 8)
+        if (fields.length < 8)
         {
-            throw new IOException("Invalid transaction line" + line);
+            throw new IOException("Invalid transaction line" + line + ", Required fields=" + 8 + " Found=" + fields.length);
         }
-        // #DATE,DESCRIPTION,DEBIT,COMMENT,ISLOCKED,INCOMETYPE,TAXCATEGORY,PROPERTY
-        setDate(new Date(fields[0]));
+        // #DATE,DESCRIPTION,DEBIT,COMMENT,ISLOCKED,TRTYPE,TAXCATEGORY,PROPERTY
+
+        DateFormat format = new SimpleDateFormat("MM-DD-yyyy", Locale.ENGLISH);
+        Date date = format.parse(fields[0]);
+
+        setDate(date);
+
         setDescription(fields[1]);
         Float value = getFloatVaue(fields[2].trim());
         setDebit(value);
@@ -231,7 +239,7 @@ public abstract class TR
             tempStr = tempStr.toLowerCase().trim();
         if (!"null".equals(tempStr))
         {
-            setIncomeType(tempStr);
+            setTrType(tempStr);
         }
 
         tempStr = fields[6];
@@ -251,7 +259,7 @@ public abstract class TR
         }
     }
 
-    public void init(String line, final BankStatementFormat bc) throws IOException
+    public void init(String line, final BankStatementFormat bc) throws IOException, ParseException
     {
         line = line.toLowerCase().trim();
         if (line.isEmpty())
@@ -269,7 +277,11 @@ public abstract class TR
         {
             fields[i] = trimQuote(fields[i]);
         }
-        setDate(new Date(fields[bc.getDateIndex()]));
+        DateFormat format = new SimpleDateFormat("MM-DD-yyyy", Locale.ENGLISH);
+        Date date = format.parse(fields[bc.getDateIndex()]);
+
+        setDate(date);
+
         if (fields.length > bc.getDescIndex())
         {
             setDescription(fields[bc.getDescIndex()]);
@@ -382,7 +394,7 @@ public abstract class TR
         final StringBuffer sb = new StringBuffer();
         sb.append(new SimpleDateFormat("MM/dd/yyyy").format(date));
         sb.append(", " + debit);
-        sb.append(", " + incomeType);
+        sb.append(", " + trType);
         sb.append(", " + taxCategory);
         sb.append(", " + property);
         sb.append(", " + description);
