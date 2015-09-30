@@ -26,7 +26,7 @@ TRANSACTION_TYPE=Repairs
 DESC_CONTAINS=checkno:102:
 
 # Use general configuration in the end
-INCLUDE_FILE=data\CommonTaxConfig.txt
+INCLUDE_FILE=data/CommonTaxConfig.txt
 
 BACCOUNT=7963Calvary_BBT
 PROPERTY=7963Calvary
@@ -50,7 +50,7 @@ TRANSACTION_TYPE=IGNORE
 DESC_CONTAINS=checkno:1009:
 
 # Use general configuration in the end
-INCLUDE_FILE=data\CommonTaxConfig.txt
+INCLUDE_FILE=data/CommonTaxConfig.txt
 
 
 ##############################################################
@@ -132,7 +132,7 @@ TRANSACTION_TYPE=repairs
 DESC_CONTAINS=checkno:154:
 
 # Use general configuration in the end
-INCLUDE_FILE=data\CommonTaxConfig.txt
+INCLUDE_FILE=data/CommonTaxConfig.txt
 
 
 

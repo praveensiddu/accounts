@@ -382,6 +382,10 @@ public class AccountsMainApp
                     + "," + tr.getComment() + "," + tr.isLocked() + "," + tr.getIncomeType() + "," + tr.getTaxCategory() + ","
                     + tr.getProperty() + "\n");
         }
+        if (!file.endsWith(".csv"))
+        {
+            file += ".csv";
+        }
         PrintWriter out = new PrintWriter(file);
         out.println(sb);
         out.close();
@@ -486,8 +490,10 @@ public class AccountsMainApp
         }
         System.out.println("Usage: -A action options\n");
         System.out.println("    -A createacs -file <f>");
+        System.out.println("    -A listacs");
         System.out.println("    -A deleteacs -file <f>\n");
         System.out.println("    -A createprops -file <f>");
+        System.out.println("    -A listprops");
         System.out.println("    -A DELETEPROPS -file <f>\n");
         System.out.println("    -A creategroups -file <f>");
         System.out.println("    -A deletegroups -file <f>\n");
@@ -509,10 +515,13 @@ public class AccountsMainApp
     public static final String IMPORTTR         = "importtr";
 
     public static final String              CREATEACS    = "createacs";
+    public static final String              LISTACS      = "listacs";
     public static final String              DELETEACS    = "deleteacs";
     public static final String              CREATEPROPS  = "createprops";
+    public static final String              LISTPROPS    = "listprops";
     public static final String              DELETEPROPS  = "deleteprops";
     public static final String              CREATEGROUPS = "creategroups";
+    public static final String              LISTGROUPS   = "listgroups";
     public static final String              DELETEGROUPS = "deletegroups";
     public static final Map<String, String> ALL_OPTS     = new HashMap<String, String>();
 
@@ -562,6 +571,14 @@ public class AccountsMainApp
                 {
                     System.out.println(ba);
                 }
+            } else if (LISTACS.equalsIgnoreCase(action))
+            {
+                DBIfc dbi = DBFactory.createDBIfc();
+                dbi.createAndConnectDB(null);
+                for (BankAccount ba : dbi.getAccounts().values())
+                {
+                    System.out.println(ba);
+                }
             } else if (DELETEACS.equalsIgnoreCase(action))
             {
                 if (argHash.get("file") == null)
@@ -596,6 +613,14 @@ public class AccountsMainApp
                 {
                     System.out.println(rp1);
                 }
+            } else if (LISTPROPS.equalsIgnoreCase(action))
+            {
+                DBIfc dbi = DBFactory.createDBIfc();
+                dbi.createAndConnectDB(null);
+                for (RealProperty rp1 : dbi.getProperties().values())
+                {
+                    System.out.println(rp1);
+                }
             } else if (DELETEPROPS.equalsIgnoreCase(action))
             {
                 if (argHash.get("file") == null)
@@ -621,10 +646,19 @@ public class AccountsMainApp
                 }
                 List<IGroup> rpL = DBImpl.parseGroupFile(argHash.get("file"));
                 DBIfc dbi = DBFactory.createDBIfc();
+                dbi.createAndConnectDB(null);
                 for (IGroup rp : rpL)
                 {
                     dbi.createGroup(rp);
                 }
+                for (IGroup rp1 : dbi.getGropusMap().values())
+                {
+                    System.out.println(rp1);
+                }
+            } else if (LISTGROUPS.equalsIgnoreCase(action))
+            {
+                DBIfc dbi = DBFactory.createDBIfc();
+                dbi.createAndConnectDB(null);
                 for (IGroup rp1 : dbi.getGropusMap().values())
                 {
                     System.out.println(rp1);
@@ -637,6 +671,7 @@ public class AccountsMainApp
                 }
                 List<IGroup> rpL = DBImpl.parseGroupFile(argHash.get("file"));
                 DBIfc dbi = DBFactory.createDBIfc();
+                dbi.createAndConnectDB(null);
                 for (IGroup rp : rpL)
                 {
                     dbi.deleteGroup(rp.getName());
@@ -685,13 +720,12 @@ public class AccountsMainApp
                     System.out.println("Database is empty");
                 } else
                 {
-
                     System.out.println("" + sb);
                 }
 
             } else if (EXPORTTR.equalsIgnoreCase(action))
             {
-                if (argHash.get("file") == null || !argHash.get("file").endsWith("csv"))
+                if (argHash.get("file") == null)
                 {
                     usage("csv file is required as argument.");
                 }
