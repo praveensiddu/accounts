@@ -211,7 +211,7 @@ public abstract class TR
         }
         // #DATE,DESCRIPTION,DEBIT,COMMENT,ISLOCKED,TRTYPE,TAXCATEGORY,PROPERTY
 
-        DateFormat format = new SimpleDateFormat("MM-DD-yyyy", Locale.ENGLISH);
+        DateFormat format = new SimpleDateFormat("MM-dd-yyyy", Locale.ENGLISH);
         Date date = format.parse(fields[0]);
 
         setDate(date);
@@ -277,7 +277,7 @@ public abstract class TR
         {
             fields[i] = trimQuote(fields[i]);
         }
-        DateFormat format = new SimpleDateFormat("MM-DD-yyyy", Locale.ENGLISH);
+        DateFormat format = new SimpleDateFormat(bc.getDateFormat(), Locale.ENGLISH);
         Date date = format.parse(fields[bc.getDateIndex()]);
 
         setDate(date);
@@ -392,7 +392,7 @@ public abstract class TR
     public String toString()
     {
         final StringBuffer sb = new StringBuffer();
-        sb.append(new SimpleDateFormat("MM/dd/yyyy").format(date));
+        sb.append(new SimpleDateFormat("MM-dd-yyyy").format(date));
         sb.append(", " + debit);
         sb.append(", " + trType);
         sb.append(", " + taxCategory);
@@ -400,7 +400,27 @@ public abstract class TR
         sb.append(", " + description);
 
         return sb.toString();
+    }
 
+    public String toCsv()
+    {
+        String lTrType = getTrType();
+        if (lTrType == null)
+            lTrType = "";
+        String lTaxCategory = getTaxCategory();
+        if (lTaxCategory == null)
+            lTaxCategory = "";
+        String lProperty = getProperty();
+        if (lProperty == null)
+            lProperty = "";
+        String lComment = getComment();
+        if (lComment == null)
+            lComment = "";
+        final StringBuffer sb = new StringBuffer();
+        sb.append(new SimpleDateFormat("MM-dd-yyyy").format(getDate()) + "," + getDescription() + "," + getDebit() + ","
+                + lComment + "," + isLocked() + "," + lTrType + "," + lTaxCategory + "," + lProperty);
+
+        return sb.toString();
     }
 
     public String getComment()

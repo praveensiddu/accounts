@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -365,7 +366,7 @@ public class DBImpl implements DBIfc
         EntityManager em = factory.createEntityManager();
         List<TR> trList = em.createNamedQuery("TR" + tableId + ".getList", TR.class).getResultList();
         em.close();
-        Map<TRId, TR> trMap = new HashMap<TRId, TR>();
+        Map<TRId, TR> trMap = new TreeMap<TRId, TR>();
         for (TR tr : trList)
         {
             tr.setTrId();
@@ -487,7 +488,7 @@ public class DBImpl implements DBIfc
                 String[] fields = line.split(",");
                 if (fields.length != 2)
                 {
-                    throw new IOException("Invalid account line=" + line);
+                    throw new IOException("Invalid account line=" + line + ", expected 2 columns");
                 }
                 BankAccount ba = new BankAccount();
                 ba.setName(fields[0]);

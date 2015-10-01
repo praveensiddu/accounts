@@ -6,15 +6,15 @@ import java.util.Date;
 import javax.persistence.Embeddable;
 
 @Embeddable
-public class TRId implements Serializable
+public class TRId implements Serializable, Comparable
 {
 
     private static final long serialVersionUID = 1L;
 
-    private Date              date;
-    private String            description;
+    private Date   date;
+    private String description;
 
-    private float             debit;
+    private float debit;
 
     public TRId()
     {
@@ -101,6 +101,28 @@ public class TRId implements Serializable
     public void setDebit(float debit)
     {
         this.debit = debit;
+    }
+
+    @Override
+    public int compareTo(Object arg0)
+    {
+        if (arg0 instanceof TRId)
+        {
+            TRId newTrId = (TRId) arg0;
+            int val = this.date.compareTo(newTrId.getDate());
+            if (val == 0)
+            {
+                val = this.description.compareTo(newTrId.getDescription());
+                if (val == 0)
+                {
+                    return (int) (this.debit - newTrId.getDebit());
+                }
+            } else
+            {
+                return val;
+            }
+        }
+        return -1;
     }
 
 }

@@ -6,7 +6,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -392,6 +391,7 @@ public class AccountsMainApp
             int count = dbIfc.updateTransactions(trs);
             System.out.println("Updated transactions for " + ba.getName() + ", Count=" + count);
         }
+        System.out.println("Import transactions completed ");
 
     }
 
@@ -425,9 +425,7 @@ public class AccountsMainApp
             sb.append("#DATE,DESCRIPTION,DEBIT,COMMENT,ISLOCKED,TRTYPE,TAXCATEGORY,PROPERTY\n");
             for (final TR tr : trMap.values())
             {
-                sb.append(new SimpleDateFormat("MM-dd-yyyy").format(tr.getDate()) + "," + tr.getDescription() + ","
-                        + tr.getDebit() + "," + tr.getComment() + "," + tr.isLocked() + "," + tr.getTrType() + ","
-                        + tr.getTaxCategory() + "," + tr.getProperty() + "\n");
+                sb.append(tr.toCsv() + "\n");
             }
             String outfile = null;
             if (file == null)
@@ -451,6 +449,7 @@ public class AccountsMainApp
             out.println(sb);
             out.close();
         }
+        System.out.println("Export transactions completed.");
     }
 
     private static DBIfc classifyindb(final TaxConfig tc) throws DBException, IOException

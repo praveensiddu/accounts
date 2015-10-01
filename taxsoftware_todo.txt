@@ -1,5 +1,7 @@
+export ordered by date
 check and proceed for import2db
 check and proceed for importtr
+through test of mkuniq feature with exporttr, importtr and import2db
 
 
 rent calculation
