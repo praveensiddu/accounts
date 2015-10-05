@@ -9,19 +9,19 @@ import java.util.Map;
 
 public class TaxConfig
 {
-    public static final String                 BACCOUNT         = "baccount";
-    public static final String                 TRANSACTION_TYPE = "transaction_type";
-    public static final String                 INCLUDE_FILE     = "include_file";
-    public static final String                 DESC_CONTAINS    = "desc_contains";
-    public static final String                 DESC_STARTSWITH  = "desc_startswith";
+    public static final String BACCOUNT         = "baccount";
+    public static final String TRANSACTION_TYPE = "transaction_type";
+    public static final String INCLUDE_FILE     = "include_file";
+    public static final String DESC_CONTAINS    = "desc_contains";
+    public static final String DESC_STARTSWITH  = "desc_startswith";
 
-    public static final String                 TAX_CATEGORY     = "tax_category";
-    public static final String                 PROPERTY         = "property";
+    public static final String TAX_CATEGORY = "tax_category";
+    public static final String PROPERTY     = "property";
 
-    public static final String                 RENTAL           = "rental";
-    public static final String                 PERSONAL         = "personal";
-    public static final String                 REALESTATEAGENT  = "realestateagent";
-    private Map<String, ArrayList<RuleRecord>> accountsMap      = new HashMap<String, ArrayList<RuleRecord>>();
+    public static final String                 RENTAL          = "rental";
+    public static final String                 PERSONAL        = "personal";
+    public static final String                 REALESTATEAGENT = "realestateagent";
+    private Map<String, ArrayList<RuleRecord>> accountsMap     = new HashMap<String, ArrayList<RuleRecord>>();
 
     public TaxConfig(final String file) throws IOException
     {
@@ -53,6 +53,7 @@ public class TaxConfig
                 }
 
                 String key = fields[0].trim().toLowerCase();
+                String valueAsIs = fields[1].trim();
                 String value = fields[1].trim().toLowerCase();
                 if (currentAccount == null)
                 {
@@ -93,7 +94,7 @@ public class TaxConfig
                         arr = new ArrayList<RuleRecord>();
                         accountsMap.put(currentAccount, arr);
                     }
-                    TaxConfigInclude tcf = new TaxConfigInclude(value);
+                    TaxConfigInclude tcf = new TaxConfigInclude(valueAsIs);
                     for (RuleRecord rrinclude : tcf.getRuleRecordList())
                     {
                         rrinclude.setProperty(rr.getProperty());

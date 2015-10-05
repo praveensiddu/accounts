@@ -2,6 +2,7 @@ package accounts;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -12,6 +13,19 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.DataValidation;
+import org.apache.poi.ss.usermodel.DataValidationConstraint;
+import org.apache.poi.ss.usermodel.DataValidationHelper;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.util.CellRangeAddressList;
+import org.apache.poi.xssf.usermodel.XSSFDataValidationHelper;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import accounts.db.BankAccount;
 import accounts.db.DBException;
@@ -22,6 +36,7 @@ import accounts.db.IGroup;
 import accounts.db.RealProperty;
 import accounts.db.TR;
 import accounts.db.TRId;
+import accounts.exp.AccountExp;
 
 public class AccountsMainApp
 {
@@ -345,7 +360,7 @@ public class AccountsMainApp
         }
     }
 
-    private static void importtr(String accountName, String file) throws DBException, IOException, ParseException
+    private static void importFromCsv(String accountName, String file) throws DBException, IOException, ParseException
     {
         DBIfc dbIfc = DBFactory.createDBIfc();
         dbIfc.createAndConnectDB(null);
@@ -395,7 +410,236 @@ public class AccountsMainApp
 
     }
 
-    private static void exporttr(String accountName, String file) throws DBException, IOException
+    private static void importtr(String accountName, String file) throws DBException, IOException, ParseException, AccountExp
+    {
+        DBIfc dbIfc = DBFactory.createDBIfc();
+        dbIfc.createAndConnectDB(null);
+        if (accountName == null && file != null)
+        {
+            throw new IOException("Account cannot be null when file name is specified.");
+        }
+        if (accountName != null)
+        {
+            accountName = accountName.toLowerCase().trim();
+            if (!dbIfc.getAccounts().containsKey(accountName))
+            {
+                throw new IOException("Account is not present: " + accountName + ", List=" + dbIfc.getAccounts().keySet());
+            }
+        }
+
+        Map<String, Map<TRId, TR>> baMap = new TreeMap<>();
+
+        for (BankAccount ba : dbIfc.getAccounts().values())
+        {
+            Map<TRId, TR> trMap = dbIfc.getTransactions(ba.getTrTableId());
+            baMap.put(ba.getName(), trMap);
+        }
+
+        String outfile = null;
+        if (file == null)
+        {
+            String dir = System.getProperty("ACCOUNTSDB") + File.separator + "exporttr";
+            File dirFile = new File(dir);
+            if (!dirFile.isDirectory())
+            {
+                dirFile.mkdir();
+            }
+            outfile = dir + File.separator + "export_allaccounts.xlsx";
+        } else
+        {
+            outfile = file;
+            if (!outfile.endsWith(".xlsx"))
+            {
+                outfile += ".xlsx";
+            }
+        }
+
+        ExcelUtils eu = new ExcelUtils(baMap);
+        Map<String, Map<TRId, TR>> excelTrMap = eu.processAllSheets(outfile, dbIfc.getAccounts());
+        eu.checkSubset(excelTrMap);
+
+        System.out.println("All checks necessary for import is done. However import is not yet implemented.");
+        System.out.println("It requires a strategy where the first 3 columns in TRId is not modified.");
+        System.out.println("It also requires clear reporting of number of records updated.");
+
+    }
+
+    private static DataValidation getTrTypeCheckBoxValidation(DataValidationHelper validationHelper, int rows)
+    {
+        DataValidationConstraint trTypeConstraint = validationHelper
+                .createExplicitListConstraint(new String[] { "SELECT", "rent", "commissions", "insurance"
+
+                , "professionalfees", "mortgageinterest", "repairs", "tax", "utilities", "depreciation", "hoa", "bankfees",
+                        "ignore" });
+
+        CellRangeAddressList trTypeCellList = new CellRangeAddressList(1, rows + 1, 4, 4);
+        DataValidation trTypeDataValidation = validationHelper.createValidation(trTypeConstraint, trTypeCellList);
+        trTypeDataValidation.setSuppressDropDownArrow(true);
+        trTypeDataValidation.setShowErrorBox(true);
+        trTypeDataValidation.setErrorStyle(DataValidation.ErrorStyle.STOP);
+        // dataValidation.createPromptBox("Title", "Message Text");
+        // dataValidation.setShowPromptBox(true);
+
+        trTypeDataValidation.createErrorBox("Box Title", "Please select");
+
+        return trTypeDataValidation;
+    }
+
+    private static void exportToExcel(String accountName, String file) throws DBException, IOException
+    {
+        DBIfc dbIfc = DBFactory.createDBIfc();
+
+        dbIfc.createAndConnectDB(null);
+
+        if (accountName != null)
+        {
+            accountName = accountName.toLowerCase().trim();
+            if (!dbIfc.getAccounts().containsKey(accountName))
+            {
+                throw new IOException("Account is not present: " + accountName + ", List=" + dbIfc.getAccounts().keySet());
+            }
+        }
+
+        XSSFWorkbook workBook = new XSSFWorkbook();
+        CellStyle unlockedCellStyle = workBook.createCellStyle();
+        unlockedCellStyle.setLocked(false);
+        unlockedCellStyle.setVerticalAlignment(CellStyle.VERTICAL_TOP);
+        unlockedCellStyle.setWrapText(true);
+
+        CellStyle wrapAlignCellStyle = workBook.createCellStyle();
+        wrapAlignCellStyle.setWrapText(true);
+        wrapAlignCellStyle.setVerticalAlignment(CellStyle.VERTICAL_TOP);
+        CellStyle topAlignCellStyle = workBook.createCellStyle();
+        topAlignCellStyle.setVerticalAlignment(CellStyle.VERTICAL_TOP);
+
+        Map<String, BankAccount> baMap = dbIfc.getAccounts();
+
+        for (BankAccount ba : baMap.values())
+        {
+            if (accountName != null && !ba.getName().equalsIgnoreCase(accountName))
+            {
+                continue;
+            }
+            String baName = ba.getName();
+
+            XSSFSheet sheet = workBook.createSheet(baName);
+            {
+                XSSFRow currentRow = sheet.createRow(0);
+
+                int col = 0;
+                Cell cell = null;
+                cell = currentRow.createCell(col++);
+                cell.setCellValue("Date");
+                cell = currentRow.createCell(col++);
+                cell.setCellValue("Description");
+                cell = currentRow.createCell(col++);
+                cell.setCellValue("Debit");
+                cell = currentRow.createCell(col++);
+                cell.setCellValue("Comment");
+                cell = currentRow.createCell(col++);
+                cell.setCellValue("Transaction Type");
+                cell.setCellStyle(unlockedCellStyle);
+                cell = currentRow.createCell(col++);
+                cell.setCellValue("Tax Category");
+                cell.setCellStyle(unlockedCellStyle);
+                cell = currentRow.createCell(col++);
+                cell.setCellValue("Property");
+                cell.setCellStyle(unlockedCellStyle);
+            }
+
+            CellStyle dateCellStyle = workBook.createCellStyle();
+            dateCellStyle.setDataFormat(workBook.getCreationHelper().createDataFormat().getFormat("MM/dd/yyyy"));
+            dateCellStyle.setVerticalAlignment(CellStyle.VERTICAL_TOP);
+
+            Map<TRId, TR> trMap = dbIfc.getTransactions(ba.getTrTableId());
+
+            int RowNum = 0;
+            for (TR tr : trMap.values())
+            {
+                RowNum++;
+                XSSFRow currentRow = sheet.createRow(RowNum);
+                int col = 0;
+                Cell cell = null;
+                cell = currentRow.createCell(col++);
+                cell.setCellType(Cell.CELL_TYPE_NUMERIC);
+                cell.setCellValue(tr.getDate());
+                cell.setCellStyle(dateCellStyle);
+
+                cell = currentRow.createCell(col++);
+                cell.setCellType(Cell.CELL_TYPE_STRING);
+                cell.setCellValue(tr.getDescription());
+                cell.setCellStyle(wrapAlignCellStyle);
+
+                cell = currentRow.createCell(col++);
+                cell.setCellType(Cell.CELL_TYPE_NUMERIC);
+                cell.setCellValue(tr.getDebit());
+                cell.setCellStyle(topAlignCellStyle);
+
+                cell = currentRow.createCell(col++);
+                cell.setCellValue(tr.getComment());
+                cell.setCellType(Cell.CELL_TYPE_STRING);
+                cell.setCellStyle(unlockedCellStyle);
+
+                cell = currentRow.createCell(col++);
+                cell.setCellValue(tr.getTrType());
+                cell.setCellStyle(unlockedCellStyle);
+
+                cell = currentRow.createCell(col++);
+                cell.setCellValue(tr.getTaxCategory());
+                cell.setCellStyle(unlockedCellStyle);
+
+                cell = currentRow.createCell(col++);
+                cell.setCellValue(tr.getProperty());
+                cell.setCellStyle(unlockedCellStyle);
+
+            }
+            DataValidationHelper validationHelper = new XSSFDataValidationHelper(sheet);
+            DataValidation trTypeDataValidation = getTrTypeCheckBoxValidation(validationHelper, trMap.size());
+
+            sheet.addValidationData(trTypeDataValidation);
+            sheet.setAutoFilter(CellRangeAddress.valueOf("A1:N1"));
+            sheet.lockDeleteColumns(true);
+            sheet.lockDeleteRows(true);
+            // sheet.lockFormatCells(true);
+            // sheet.lockFormatColumns(true);
+            // sheet.lockFormatRows(true);
+            sheet.lockInsertColumns(true);
+            sheet.lockInsertRows(true);
+            sheet.lockAutoFilter(false);
+
+            sheet.setColumnWidth(0, 3000);
+            sheet.setColumnWidth(1, 14000);
+            sheet.setColumnWidth(2, 3000);
+            sheet.setColumnWidth(3, 14000);
+            sheet.setColumnWidth(4, 4000);
+            sheet.setColumnWidth(5, 4000);
+            sheet.setColumnWidth(6, 6000);
+            sheet.protectSheet("password");
+
+            // Locks the whole sheet sheet.enableLocking();
+
+        }
+        workBook.lockStructure();
+        String outFile = null;
+        if (file == null)
+        {
+            String dir = System.getProperty("ACCOUNTSDB") + File.separator + "exporttr";
+            File dirFile = new File(dir);
+            if (!dirFile.isDirectory())
+            {
+                dirFile.mkdir();
+            }
+            outFile = dir + File.separator + "export_allaccounts.xlsx";
+        }
+
+        FileOutputStream fileOutputStream = new FileOutputStream(outFile);
+        workBook.write(fileOutputStream);
+        fileOutputStream.close();
+        System.out.println("Exported transactions to=" + outFile);
+
+    }
+
+    private static void exportToCsv(String accountName, String file) throws DBException, IOException
     {
         DBIfc dbIfc = DBFactory.createDBIfc();
 
@@ -786,7 +1030,7 @@ public class AccountsMainApp
 
             } else if (EXPORTTR.equalsIgnoreCase(action))
             {
-                exporttr(argHash.get("accountname"), argHash.get("file"));
+                exportToExcel(argHash.get("accountname"), argHash.get("file"));
 
             } else if (IMPORTTR.equalsIgnoreCase(action))
             {
@@ -801,6 +1045,10 @@ public class AccountsMainApp
             // TODO Auto-generated catch block
             e.printStackTrace();
         } catch (ParseException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (AccountExp e)
         {
             // TODO Auto-generated catch block
             e.printStackTrace();

@@ -88,9 +88,9 @@ public abstract class TR
 
     public void setTrId()
     {
-        trId.setDescription(description);
-        trId.setDate(date);
-        trId.setDebit(debit);
+        this.trId.setDescription(description);
+        this.trId.setDate(date);
+        this.trId.setDebit(debit);
 
     }
 
@@ -203,7 +203,7 @@ public abstract class TR
         {
             throw new IOException("Empty transaction");
         }
-        String[] fields = line.split(",");
+        String[] fields = line.split(",", -1);
         fields = approxCsvCorrection(fields);
         if (fields.length < 8)
         {
@@ -266,7 +266,7 @@ public abstract class TR
         {
             throw new IOException("Empty transaction");
         }
-        String[] fields = line.split(",");
+        String[] fields = line.split(",", -1);
         fields = approxCsvCorrection(fields);
 
         if (fields.length <= bc.getDateIndex())
@@ -392,12 +392,10 @@ public abstract class TR
     public String toString()
     {
         final StringBuffer sb = new StringBuffer();
-        sb.append(new SimpleDateFormat("MM-dd-yyyy").format(date));
-        sb.append(", " + debit);
+        sb.append(trId);
         sb.append(", " + trType);
         sb.append(", " + taxCategory);
         sb.append(", " + property);
-        sb.append(", " + description);
 
         return sb.toString();
     }

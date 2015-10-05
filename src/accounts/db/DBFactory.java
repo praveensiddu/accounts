@@ -16,6 +16,11 @@ public class DBFactory
         return dbi;
     }
 
+    public synchronized static DBIfc inst()
+    {
+        return dbi;
+    }
+
     public static void main(String[] args)
     {
         DBIfc dbIfc = DBFactory.createDBIfc();

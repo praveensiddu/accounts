@@ -1,12 +1,13 @@
 package accounts.db;
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.persistence.Embeddable;
 
 @Embeddable
-public class TRId implements Serializable, Comparable
+public class TRId implements Serializable, Comparable<TRId>
 {
 
     private static final long serialVersionUID = 1L;
@@ -67,8 +68,11 @@ public class TRId implements Serializable, Comparable
             if (!description.equals(trId.getDescription()))
                 return false;
         }
-        if (debit != trId.getDebit())
+        // approximate check
+        if (debit - trId.getDebit() > 1 || trId.getDebit() - debit > 1)
+        {
             return false;
+        }
         return true;
 
     }
@@ -104,25 +108,34 @@ public class TRId implements Serializable, Comparable
     }
 
     @Override
-    public int compareTo(Object arg0)
+    public String toString()
     {
-        if (arg0 instanceof TRId)
+        final StringBuffer sb = new StringBuffer();
+
+        sb.append(new SimpleDateFormat("MM-dd-yyyy").format(date));
+        sb.append(", " + description);
+        sb.append(", " + debit);
+
+        return sb.toString();
+    }
+
+    @Override
+    public int compareTo(TRId o)
+    {
+        TRId newTrId = o;
+        int val = this.date.compareTo(newTrId.getDate());
+        if (val == 0)
         {
-            TRId newTrId = (TRId) arg0;
-            int val = this.date.compareTo(newTrId.getDate());
+            val = this.description.compareTo(newTrId.getDescription());
             if (val == 0)
             {
-                val = this.description.compareTo(newTrId.getDescription());
-                if (val == 0)
-                {
-                    return (int) (this.debit - newTrId.getDebit());
-                }
-            } else
-            {
-                return val;
+                return (int) (this.debit - newTrId.getDebit());
             }
+        } else
+        {
+            return val;
         }
-        return -1;
+        return 0;
     }
 
 }

@@ -42,6 +42,8 @@ public class TaxConfigInclude
                 }
 
                 String key = fields[0].trim().toLowerCase();
+
+                String valueAsIs = fields[1].trim();
                 String value = fields[1].trim().toLowerCase();
 
                 if (TaxConfig.BACCOUNT.equals(key))
@@ -58,7 +60,7 @@ public class TaxConfigInclude
                     arr.add(rr);
                 } else if (TaxConfig.INCLUDE_FILE.equals(key))
                 {
-                    TaxConfigInclude tcf = new TaxConfigInclude(value);
+                    TaxConfigInclude tcf = new TaxConfigInclude(valueAsIs);
                     for (RuleRecord rrinclude : tcf.getRuleRecordList())
                     {
                         arr.add(rrinclude);
