@@ -72,6 +72,73 @@ public abstract class TR
         setLocked(tr.isLocked());
     }
 
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (!(obj instanceof TR))
+        {
+            return false;
+        }
+        TR tr = (TR) obj;
+        if (getTrType() == null || getTrType().isEmpty())
+        {
+            if (tr.getTrType() != null && !tr.getTrType().isEmpty())
+            {
+                return false;
+            }
+        } else
+        {
+            if (!getTrType().equals(tr.getTrType()))
+            {
+                return false;
+            }
+        }
+        if (getTaxCategory() == null || getTaxCategory().isEmpty())
+        {
+            if (tr.getTaxCategory() != null && !tr.getTaxCategory().isEmpty())
+            {
+                return false;
+            }
+        } else
+        {
+            if (!getTaxCategory().equals(tr.getTaxCategory()))
+            {
+                return false;
+            }
+        }
+        if (getProperty() == null || getProperty().isEmpty())
+        {
+            if (tr.getProperty() != null && !tr.getProperty().isEmpty())
+            {
+                return false;
+            }
+        } else
+        {
+            if (!getProperty().equals(tr.getProperty()))
+            {
+                return false;
+            }
+        }
+        if (getComment() == null || getComment().isEmpty())
+        {
+            if (tr.getComment() != null && !tr.getComment().isEmpty())
+            {
+                return false;
+            }
+        } else
+        {
+            if (!getComment().equals(tr.getComment()))
+            {
+                return false;
+            }
+        }
+        if (!this.getTrId().equals(tr.getTrId()))
+        {
+            return false;
+        }
+        return true;
+    }
+
     @Transient
     private TRId trId = new TRId();
 
@@ -355,12 +422,6 @@ public abstract class TR
         }
     }
 
-    public static void main(final String[] args)
-    {
-        // TODO Auto-generated method stub
-
-    }
-
     public Date getDate()
     {
         return date;
@@ -451,5 +512,11 @@ public abstract class TR
         if (property == null)
             return;
         this.property = property;
+    }
+
+    public static void main(final String[] args)
+    {
+        // TODO Auto-generated method stub
+
     }
 }

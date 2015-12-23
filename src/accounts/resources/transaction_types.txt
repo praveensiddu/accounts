@@ -1,0 +1,12 @@
+rent
+commissions
+insurance
+professionalfees
+mortgageinterest
+repairs
+tax
+utilities
+depreciation
+hoa
+bankfees
+ignore

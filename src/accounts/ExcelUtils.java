@@ -42,6 +42,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import accounts.db.BankAccount;
 import accounts.db.DBException;
 import accounts.db.DBFactory;
+import accounts.db.RealProperty;
 import accounts.db.TR;
 import accounts.db.TRId;
 import accounts.db.inst.TRNonDB;
@@ -187,14 +188,18 @@ public class ExcelUtils
         return listFiles;
     }
 
-    public void checkSubset(Map<String, Map<TRId, TR>> excelTrMap) throws AccountExp
+    public Map<String, Map<TRId, TR>> importCheck(Map<String, Map<TRId, TR>> excelTrMap,
+                                                  Map<String, RealProperty> propMap) throws AccountExp
     {
+        Map<String, Map<TRId, TR>> importMap = new TreeMap<>();
         for (String bankAccount : excelTrMap.keySet())
         {
             if (!baMap.containsKey(bankAccount))
             {
                 throw new AccountExp(AccountExp.NOTPRESENT, "Bank account was not found in database=" + bankAccount);
             }
+
+            Map<TRId, TR> importTrList = new HashMap<>();
             Map<TRId, TR> excelTrList = excelTrMap.get(bankAccount);
             Map<TRId, TR> dbTrList = baMap.get(bankAccount);
             for (TRId trId : excelTrList.keySet())
@@ -209,8 +214,52 @@ public class ExcelUtils
                     throw new AccountExp(AccountExp.NOTPRESENT,
                             "Unable to find this transaction in DB. BankAccount=" + bankAccount + "\nTransaction=" + trId);
                 }
+                if (!excelTrList.get(trId).equals(dbTrList.get(trId)))
+                {
+                    TR trToImport = excelTrList.get(trId);
+                    if (propMap != null)
+                    {
+                        if (trToImport.getProperty() != null || !trToImport.getProperty().isEmpty())
+                        {
+                            if (!propMap.containsKey(trToImport.getProperty()))
+                            {
+                                throw new AccountExp(AccountExp.NOTPRESENT, "Unknown property=" + trToImport.getProperty()
+                                        + " in " + bankAccount + "\nAllowed list=" + propMap.keySet());
+                            }
+                        }
+
+                    }
+                    if (trToImport.getTaxCategory() != null && !trToImport.getTaxCategory().isEmpty())
+                    {
+                        if (!AccountsUtil.inst().getAllowedTaxCategories().containsKey(trToImport.getTaxCategory()))
+                        {
+                            throw new AccountExp(AccountExp.NOTPRESENT,
+                                    "Unknown tax category=" + trToImport.getTaxCategory() + " in " + bankAccount
+                                            + "\nAllowed list=" + AccountsUtil.inst().getAllowedTaxCategories().keySet());
+                        }
+                    }
+                    if (trToImport.getTrType() != null && !trToImport.getTrType().isEmpty())
+                    {
+                        if (!AccountsUtil.inst().getAllowedTrTypes().containsKey(trToImport.getTrType()))
+                        {
+                            throw new AccountExp(AccountExp.NOTPRESENT, "Unknown tr type=" + trToImport.getTrType() + " in "
+                                    + bankAccount + "\nAllowed list=" + AccountsUtil.inst().getAllowedTrTypes().keySet());
+                        }
+                    }
+                    if (trToImport.getComment() != null && trToImport.getComment().length() > AccountsUtil.COMMENT_MAXLEN)
+                    {
+                        throw new AccountExp(AccountExp.ACCOUNT_MAX_LIMIT, "Comment is too long=" + trToImport.getComment()
+                                + " in " + bankAccount + "\nMax limit=" + AccountsUtil.COMMENT_MAXLEN);
+                    }
+                    importTrList.put(trId, trToImport);
+                }
+            }
+            if (importTrList.size() > 0)
+            {
+                importMap.put(bankAccount, importTrList);
             }
         }
+        return importMap;
     }
 
     public static void main(String[] args) throws Exception
@@ -224,7 +273,7 @@ public class ExcelUtils
         Map<String, Map<TRId, TR>> baMap = getBankTransactionMapFromCsv(args[0]);
         final ExcelUtils howto = new ExcelUtils(baMap);
         Map<String, Map<TRId, TR>> excelTrMap = howto.processAllSheets(args[1]);
-        howto.checkSubset(excelTrMap);
+        howto.importCheck(excelTrMap, null);
         // howto.processAllSheets(args[0]);
     }
 }

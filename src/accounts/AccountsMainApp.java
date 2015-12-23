@@ -59,6 +59,24 @@ public class AccountsMainApp
     public static final String[]             scheduleEAry     = { null, null, null, RENT, null, null, null, null, COMMISSIONS,
             INSURANCE, PROFESSIONALFEES, null, MORTGAGEINTEREST, null, REPAIRS, null, TAX, UTILITIES, DEPRECIATION, HOA, OTHER };
 
+    public static final Map<String, String> TRTYPE_MAP = new HashMap<>();
+
+    static
+    {
+        TRTYPE_MAP.put("rent", "");
+        TRTYPE_MAP.put("commissions", "");
+        TRTYPE_MAP.put("insurance", "");
+        TRTYPE_MAP.put("professionalfees", "");
+        TRTYPE_MAP.put("mortgageinterest", "");
+        TRTYPE_MAP.put("repairs", "");
+        TRTYPE_MAP.put("tax", "");
+        TRTYPE_MAP.put("utilities", "");
+        TRTYPE_MAP.put("depreciation", "");
+        TRTYPE_MAP.put("hoa", "");
+        TRTYPE_MAP.put("bankfees", "");
+        TRTYPE_MAP.put("ignore", "");
+    }
+
     static
     {
         scheduleEMap = new HashMap<String, Integer>();
@@ -410,9 +428,11 @@ public class AccountsMainApp
 
     }
 
-    private static void importtr(String accountName, String file) throws DBException, IOException, ParseException, AccountExp
+    private static void importFromExcel(String accountName, String file, boolean commit) throws DBException, IOException,
+                                                                                         ParseException, AccountExp
     {
         DBIfc dbIfc = DBFactory.createDBIfc();
+        AccountsUtil.createInstance();
         dbIfc.createAndConnectDB(null);
         if (accountName == null && file != null)
         {
@@ -435,7 +455,7 @@ public class AccountsMainApp
             baMap.put(ba.getName(), trMap);
         }
 
-        String outfile = null;
+        String excelFile = null;
         if (file == null)
         {
             String dir = System.getProperty("ACCOUNTSDB") + File.separator + "exporttr";
@@ -444,23 +464,49 @@ public class AccountsMainApp
             {
                 dirFile.mkdir();
             }
-            outfile = dir + File.separator + "export_allaccounts.xlsx";
+            excelFile = dir + File.separator + "export_allaccounts.xlsx";
         } else
         {
-            outfile = file;
-            if (!outfile.endsWith(".xlsx"))
+            excelFile = file;
+            if (!excelFile.endsWith(".xlsx"))
             {
-                outfile += ".xlsx";
+                excelFile += ".xlsx";
             }
         }
 
         ExcelUtils eu = new ExcelUtils(baMap);
-        Map<String, Map<TRId, TR>> excelTrMap = eu.processAllSheets(outfile, dbIfc.getAccounts());
-        eu.checkSubset(excelTrMap);
+        Map<String, Map<TRId, TR>> excelTrMap = eu.processAllSheets(excelFile, dbIfc.getAccounts());
+        Map<String, RealProperty> propMap = dbIfc.getProperties();
+        Map<String, Map<TRId, TR>> changedBaMap = eu.importCheck(excelTrMap, propMap);
 
-        System.out.println("All checks necessary for import is done. However import is not yet implemented.");
-        System.out.println("It requires a strategy where the first 3 columns in TRId is not modified.");
-        System.out.println("It also requires clear reporting of number of records updated.");
+        if (changedBaMap.size() == 0)
+        {
+            System.out.println("There are no changes to be committed");
+        } else
+        {
+            System.out.println("\n\nRecords to be committed:");
+            for (String bankAccount : changedBaMap.keySet())
+            {
+                System.out.println("BankAccount=" + bankAccount);
+                Map<TRId, TR> changedTrMap = changedBaMap.get(bankAccount);
+
+                for (TR tr : changedTrMap.values())
+                {
+                    System.out.println("    " + tr);
+                }
+            }
+            System.out.println("Import check succeeded. Run with -commit to commit the changes in excel.");
+            if (commit)
+            {
+                for (String bankAccount : changedBaMap.keySet())
+                {
+                    System.out.println("Committing BankAccount=" + bankAccount);
+                    Map<TRId, TR> changedTrMap = changedBaMap.get(bankAccount);
+                    dbIfc.updateTransactions(changedTrMap);
+                }
+
+            }
+        }
 
     }
 
@@ -807,8 +853,8 @@ public class AccountsMainApp
                 "    -A parseandclassify -bankstatement <csvfile> -accountname <n> -taxconfig <f> [-bankstformat <f> ]\n");
         System.out.println("    -A import2db -bankstatement <csvfile> -accountname <n>\n");
         System.out.println("    -A classifyindb -taxconfig <f> -year <yyyy>\n");
-        System.out.println("    -A exporttr [-accountname <n>] [-file <f.csv>]\n");
-        System.out.println("    -A importtr [-accountname <n>] [-file <f.csv>]\n");
+        System.out.println("    -A exp2excel [-accountname <n>] [-file <f.xlsx>]\n");
+        System.out.println("    -A impexcel [-commit] [-accountname <n>] [-file <f.xlsx>]\n");
         System.exit(1);
     }
 
@@ -816,8 +862,8 @@ public class AccountsMainApp
     public static final String IMPORT2DB        = "import2db";
     public static final String PARSEANDCLASSIFY = "parseandclassify";
     public static final String CLASSIFYINDB     = "classifyindb";
-    public static final String EXPORTTR         = "exporttr";
-    public static final String IMPORTTR         = "importtr";
+    public static final String EXP2EXCEL        = "exp2excel";
+    public static final String IMPEXCEL         = "impexcel";
 
     public static final String              CREATEACS    = "createacs";
     public static final String              LISTACS      = "listacs";
@@ -839,6 +885,8 @@ public class AccountsMainApp
         ALL_OPTS.put("taxconfig", Getopt.CONTRNT_S);
         ALL_OPTS.put("year", Getopt.CONTRNT_I);
         ALL_OPTS.put("file", Getopt.CONTRNT_S);
+        ALL_OPTS.put("commit", Getopt.CONTRNT_NOARG);
+
     }
 
     public static void main(final String[] args)
@@ -1028,13 +1076,13 @@ public class AccountsMainApp
                     System.out.println("" + sb);
                 }
 
-            } else if (EXPORTTR.equalsIgnoreCase(action))
+            } else if (EXP2EXCEL.equalsIgnoreCase(action))
             {
                 exportToExcel(argHash.get("accountname"), argHash.get("file"));
 
-            } else if (IMPORTTR.equalsIgnoreCase(action))
+            } else if (IMPEXCEL.equalsIgnoreCase(action))
             {
-                importtr(argHash.get("accountname"), argHash.get("file"));
+                importFromExcel(argHash.get("accountname"), argHash.get("file"), argHash.get("commit") != null);
 
             } else
             {

@@ -57,9 +57,25 @@ public class DBImpl implements DBIfc
         if (!fmtFile.exists())
             Files.copy(new File(getClass().getResource("/accounts/resources/dcu_statement_format.txt").getFile()).toPath(),
                     fmtFile.toPath());
+        fmtFile = new File(configDir + File.separator + "dcu_visa_statement_format.txt");
+        if (!fmtFile.exists())
+            Files.copy(new File(getClass().getResource("/accounts/resources/dcu_visa_statement_format.txt").getFile()).toPath(),
+                    fmtFile.toPath());
         fmtFile = new File(configDir + File.separator + "wellsfargo_statement_format.txt");
         if (!fmtFile.exists())
             Files.copy(new File(getClass().getResource("/accounts/resources/wellsfargo_statement_format.txt").getFile()).toPath(),
+                    fmtFile.toPath());
+        fmtFile = new File(configDir + File.separator + "amex_statement_format.txt");
+        if (!fmtFile.exists())
+            Files.copy(new File(getClass().getResource("/accounts/resources/amex_statement_format.txt").getFile()).toPath(),
+                    fmtFile.toPath());
+        fmtFile = new File(configDir + File.separator + "transaction_types.txt");
+        if (!fmtFile.exists())
+            Files.copy(new File(getClass().getResource("/accounts/resources/transaction_types.txt").getFile()).toPath(),
+                    fmtFile.toPath());
+        fmtFile = new File(configDir + File.separator + "tax_category.txt");
+        if (!fmtFile.exists())
+            Files.copy(new File(getClass().getResource("/accounts/resources/tax_category.txt").getFile()).toPath(),
                     fmtFile.toPath());
 
     }

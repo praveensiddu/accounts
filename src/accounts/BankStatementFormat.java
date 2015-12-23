@@ -74,7 +74,7 @@ public class BankStatementFormat
         File f = new File(file);
         if (!f.exists())
         {
-            throw new IOException("The file defining the bank statement format is missing at this location" + file);
+            throw new IOException("The file defining the bank statement format is missing at this location\n" + file);
         }
         final FileReader fr = new FileReader(file);
         final BufferedReader br = new BufferedReader(fr);
@@ -82,7 +82,7 @@ public class BankStatementFormat
         {
             for (String line; (line = br.readLine()) != null;)
             {
-                line = line.toLowerCase().trim();
+                line = line.trim();
                 if (line.isEmpty())
                 {
                     continue;
@@ -97,34 +97,35 @@ public class BankStatementFormat
                 {
                     throw new IOException("Invalid line=" + line);
                 }
-                if (line.startsWith(DATE_FORMAT))
+                String lCaseLine = line.toLowerCase();
+                if (lCaseLine.startsWith(DATE_FORMAT))
                 {
                     setDateFormat(fields[1].trim());
-                } else if (line.startsWith(IGNORE_LINES_STARTSWITH))
+                } else if (lCaseLine.startsWith(IGNORE_LINES_STARTSWITH))
                 {
                     ignLineStartsWith.add(fields[1].trim());
-                } else if (line.startsWith(IGNORE_LINES_CONTAINS))
+                } else if (lCaseLine.startsWith(IGNORE_LINES_CONTAINS))
                 {
                     ignLineContains.add(fields[1].trim());
-                } else if (line.startsWith(DATE_COl))
+                } else if (lCaseLine.startsWith(DATE_COl))
                 {
                     setDateIndex(new Integer(fields[1].trim()).intValue() - 1);
-                } else if (line.startsWith(DESCRIPTION_COL))
+                } else if (lCaseLine.startsWith(DESCRIPTION_COL))
                 {
                     setDescIndex(new Integer(fields[1].trim()).intValue() - 1);
-                } else if (line.startsWith(MEMO_COL))
+                } else if (lCaseLine.startsWith(MEMO_COL))
                 {
                     setMemoIndex(new Integer(fields[1].trim()).intValue() - 1);
-                } else if (line.startsWith(AMOUNT_DEBIT_COL))
+                } else if (lCaseLine.startsWith(AMOUNT_DEBIT_COL))
                 {
                     setDebitIndex(new Integer(fields[1].trim()).intValue() - 1);
-                } else if (line.startsWith(AMOUNT_CREDIT_COL))
+                } else if (lCaseLine.startsWith(AMOUNT_CREDIT_COL))
                 {
                     setCreditIndex(new Integer(fields[1].trim()).intValue() - 1);
-                } else if (line.startsWith(CHECK_NUMBER_COL))
+                } else if (lCaseLine.startsWith(CHECK_NUMBER_COL))
                 {
                     setCheckNoIndex(new Integer(fields[1].trim()).intValue() - 1);
-                } else if (line.startsWith(FEES_COL))
+                } else if (lCaseLine.startsWith(FEES_COL))
                 {
                     setFeesIndex(new Integer(fields[1].trim()).intValue() - 1);
                 }
