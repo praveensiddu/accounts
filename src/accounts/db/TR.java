@@ -48,12 +48,13 @@ public abstract class TR
     private Date date;
 
     @Id
+    @Column(length = 200)
     private String description;
-    @Column(length = 100)
-    private String comment;
 
     @Id
     private float   debit;
+    @Column(length = 100)
+    private String  comment;
     private boolean locked;
 
     @Column(length = 20)
@@ -140,6 +141,7 @@ public abstract class TR
     }
 
     @Transient
+    // Tells JPA not to persist this in database
     private TRId trId = new TRId();
 
     public String getDescription()

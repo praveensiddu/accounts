@@ -69,7 +69,7 @@ public class TRId implements Serializable, Comparable<TRId>
                 return false;
         }
         // approximate check
-        if (debit - trId.getDebit() > 1 || trId.getDebit() - debit > 1)
+        if ((debit - trId.getDebit() > 1) || (trId.getDebit() - debit > 1))
         {
             return false;
         }
@@ -129,13 +129,20 @@ public class TRId implements Serializable, Comparable<TRId>
             val = this.description.compareTo(newTrId.getDescription());
             if (val == 0)
             {
-                return (int) (this.debit - newTrId.getDebit());
+                if (this.debit > newTrId.getDebit())
+                {
+                    return 1;
+                } else if (this.debit < newTrId.getDebit())
+                {
+                    return -1;
+                }
+                return 0;
             }
         } else
         {
             return val;
         }
-        return 0;
+        return val;
     }
 
 }

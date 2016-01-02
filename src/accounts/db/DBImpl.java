@@ -383,9 +383,10 @@ public class DBImpl implements DBIfc
         List<TR> trList = em.createNamedQuery("TR" + tableId + ".getList", TR.class).getResultList();
         em.close();
         Map<TRId, TR> trMap = new TreeMap<TRId, TR>();
+
         for (TR tr : trList)
         {
-            tr.setTrId();
+            tr.setTrId(); // TrId is not filled by JPA. So set it.
             TRId trId = tr.getTrId();
             trMap.put(trId, tr);
         }
