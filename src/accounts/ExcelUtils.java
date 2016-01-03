@@ -219,12 +219,12 @@ public class ExcelUtils
                     TR trToImport = excelTrList.get(trId);
                     if (propMap != null)
                     {
-                        if (trToImport.getProperty() != null || !trToImport.getProperty().isEmpty())
+                        if (trToImport.getProperty() != null && !trToImport.getProperty().isEmpty())
                         {
                             if (!propMap.containsKey(trToImport.getProperty()))
                             {
-                                throw new AccountExp(AccountExp.NOTPRESENT, "Unknown property=" + trToImport.getProperty()
-                                        + " in " + bankAccount + "\nAllowed list=" + propMap.keySet());
+                                throw new AccountExp(AccountExp.NOTPRESENT, "Unknown property=\"" + trToImport.getProperty()
+                                        + "\" in " + bankAccount + "\nAllowed list=" + propMap.keySet());
                             }
                         }
 

@@ -495,16 +495,19 @@ public class AccountsMainApp
                     System.out.println("    " + tr);
                 }
             }
-            System.out.println("Import check succeeded. Run with -commit to commit the changes in excel.");
+            System.out.println("Import check succeeded.");
             if (commit)
             {
                 for (String bankAccount : changedBaMap.keySet())
                 {
                     System.out.println("Committing BankAccount=" + bankAccount);
                     Map<TRId, TR> changedTrMap = changedBaMap.get(bankAccount);
-                    dbIfc.updateTransactions(changedTrMap);
+                    int count = dbIfc.updateTransactions(changedTrMap);
                 }
 
+            } else
+            {
+                System.out.println("Run with -commit to commit the changes in excel.");
             }
         }
 
@@ -826,11 +829,52 @@ public class AccountsMainApp
 
     }
 
-    public static void commit(BankStatement bs) throws DBException
+    public static Map<TRId, TR> import2DBCheck(BankStatement bs) throws DBException
     {
         DBIfc dbIfc = DBFactory.createDBIfc();
-        int count = dbIfc.updateTransactions(bs.getTrs());
-        System.out.println("updated transaction count=" + count);
+
+        Map<TRId, TR> newTrList = new HashMap<>();
+        Map<TRId, TR> inputTrList = bs.getTrs();
+        Map<TRId, TR> dbTrList = dbIfc.getTransactions(bs.getBankAccount().getTrTableId());
+        for (TRId trId : inputTrList.keySet())
+        {
+            if (dbTrList.containsKey(trId))
+            {
+                // It is already in database.
+                continue;
+            }
+            newTrList.put(trId, inputTrList.get(trId));
+        }
+        return newTrList;
+    }
+
+    public static void checkAndCommit(BankStatement bs, boolean commit) throws DBException
+    {
+        DBIfc dbIfc = DBFactory.createDBIfc();
+        Map<TRId, TR> newTrList = import2DBCheck(bs);
+        if (newTrList.size() == 0)
+        {
+            System.out.println("There are no changes to be committed.");
+        } else
+        {
+            System.out.println("\n\nRecords to be committed:");
+
+            for (TR tr : newTrList.values())
+            {
+                System.out.println("    " + tr);
+            }
+            System.out.println("Import check succeeded.");
+            if (commit)
+            {
+                int count = dbIfc.updateTransactions(newTrList);
+                System.out.println("updated transaction count=" + count);
+            } else
+            {
+
+                System.out.println("Run with -commit to commit the changes.");
+            }
+        }
+
     }
 
     public static void usage(final String err)
@@ -851,7 +895,7 @@ public class AccountsMainApp
         System.out.println("    -A parse -bankstatement <csvfile> -accountname <n> [-bankstformat <f>]\n");
         System.out.println(
                 "    -A parseandclassify -bankstatement <csvfile> -accountname <n> -taxconfig <f> [-bankstformat <f> ]\n");
-        System.out.println("    -A import2db -bankstatement <csvfile> -accountname <n>\n");
+        System.out.println("    -A import2db -bankstatement <csvfile> -accountname <n> [-commit]\n");
         System.out.println("    -A classifyindb -taxconfig <f> -year <yyyy>\n");
         System.out.println("    -A exp2excel [-accountname <n>] [-file <f.xlsx>]\n");
         System.out.println("    -A impexcel [-commit] [-accountname <n>] [-file <f.xlsx>]\n");
@@ -1044,7 +1088,7 @@ public class AccountsMainApp
                 final BankStatement bs = new BankStatement(argHash.get("bankstatement"), argHash.get("accountname"),
                         argHash.get("bankstformat"));
 
-                commit(bs);
+                checkAndCommit(bs, argHash.get("commit") != null);
             } else if (PARSEANDCLASSIFY.equalsIgnoreCase(action))
             {
                 final BankStatement bs = new BankStatement(argHash.get("bankstatement"), argHash.get("accountname"),

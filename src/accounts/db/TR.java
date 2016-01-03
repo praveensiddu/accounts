@@ -513,6 +513,7 @@ public abstract class TR
     {
         if (property == null)
             return;
+        property = property.trim().toLowerCase();
         this.property = property;
     }
 
