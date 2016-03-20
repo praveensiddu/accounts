@@ -151,6 +151,9 @@ public abstract class TR
 
     public void setDescription(String description)
     {
+        if (description != null)
+            description = description.trim().toLowerCase();
+
         this.description = description;
         this.trId.setDescription(description);
     }

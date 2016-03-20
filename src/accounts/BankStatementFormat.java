@@ -103,10 +103,10 @@ public class BankStatementFormat
                     setDateFormat(fields[1].trim());
                 } else if (lCaseLine.startsWith(IGNORE_LINES_STARTSWITH))
                 {
-                    ignLineStartsWith.add(fields[1].trim());
+                    ignLineStartsWith.add(fields[1].trim().toLowerCase());
                 } else if (lCaseLine.startsWith(IGNORE_LINES_CONTAINS))
                 {
-                    ignLineContains.add(fields[1].trim());
+                    ignLineContains.add(fields[1].trim().toLowerCase());
                 } else if (lCaseLine.startsWith(DATE_COl))
                 {
                     setDateIndex(new Integer(fields[1].trim()).intValue() - 1);

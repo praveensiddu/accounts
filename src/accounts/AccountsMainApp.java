@@ -534,7 +534,7 @@ public class AccountsMainApp
         return trTypeDataValidation;
     }
 
-    private static void exportToExcel(String accountName, String file) throws DBException, IOException
+    private static void exportToExcel(String accountName, String file, String filter) throws DBException, IOException
     {
         DBIfc dbIfc = DBFactory.createDBIfc();
 
@@ -605,6 +605,13 @@ public class AccountsMainApp
             int RowNum = 0;
             for (TR tr : trMap.values())
             {
+                if (filter != null)
+                {
+                    if (filter.equals(tr.getTrType()))
+                    {
+                        continue;
+                    }
+                }
                 RowNum++;
                 XSSFRow currentRow = sheet.createRow(RowNum);
                 int col = 0;
@@ -884,20 +891,20 @@ public class AccountsMainApp
             System.out.println(err);
         }
         System.out.println("Usage: -A action options\n");
-        System.out.println("    -A createacs -file <f>");
+        System.out.println("    -A createacs -file <csv>");
         System.out.println("    -A listacs");
-        System.out.println("    -A deleteacs -file <f>\n");
-        System.out.println("    -A createprops -file <f>");
+        System.out.println("    -A deleteacs -file <csv>\n");
+        System.out.println("    -A createprops -file <csv>");
         System.out.println("    -A listprops");
-        System.out.println("    -A DELETEPROPS -file <f>\n");
-        System.out.println("    -A creategroups -file <f>");
-        System.out.println("    -A deletegroups -file <f>\n");
+        System.out.println("    -A DELETEPROPS -file <csv>\n");
+        System.out.println("    -A creategroups -file <csv>");
+        System.out.println("    -A deletegroups -file <csv>\n");
         System.out.println("    -A parse -bankstatement <csvfile> -accountname <n> [-bankstformat <f>]\n");
         System.out.println(
                 "    -A parseandclassify -bankstatement <csvfile> -accountname <n> -taxconfig <f> [-bankstformat <f> ]\n");
         System.out.println("    -A import2db -bankstatement <csvfile> -accountname <n> [-commit]\n");
         System.out.println("    -A classifyindb -taxconfig <f> -year <yyyy>\n");
-        System.out.println("    -A exp2excel [-accountname <n>] [-file <f.xlsx>]\n");
+        System.out.println("    -A exp2excel [-accountname <n>] [-file <f.xlsx>] [-filter \"tr types\"]\n");
         System.out.println("    -A impexcel [-commit] [-accountname <n>] [-file <f.xlsx>]\n");
         System.exit(1);
     }
@@ -930,6 +937,7 @@ public class AccountsMainApp
         ALL_OPTS.put("year", Getopt.CONTRNT_I);
         ALL_OPTS.put("file", Getopt.CONTRNT_S);
         ALL_OPTS.put("commit", Getopt.CONTRNT_NOARG);
+        ALL_OPTS.put("filter", Getopt.CONTRNT_S);
 
     }
 
@@ -1122,7 +1130,7 @@ public class AccountsMainApp
 
             } else if (EXP2EXCEL.equalsIgnoreCase(action))
             {
-                exportToExcel(argHash.get("accountname"), argHash.get("file"));
+                exportToExcel(argHash.get("accountname"), argHash.get("file"), argHash.get("filter"));
 
             } else if (IMPEXCEL.equalsIgnoreCase(action))
             {

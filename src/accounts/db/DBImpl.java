@@ -555,7 +555,7 @@ public class DBImpl implements DBIfc
                     continue;
                 }
                 line = line.toLowerCase().trim();
-                if (line.isEmpty() || line.startsWith("#"))
+                if (line.isEmpty() || line.startsWith("#") || line.startsWith(","))
                 {
                     continue;
                 }
