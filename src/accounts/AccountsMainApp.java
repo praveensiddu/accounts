@@ -6,10 +6,13 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -513,13 +516,30 @@ public class AccountsMainApp
 
     }
 
+    private static DataValidation getTaxCategoryCheckBoxValidation(DataValidationHelper validationHelper, int rows)
+    {
+        Map<String, String> map = new TreeMap<String, String>(AccountsUtil.inst().getAllowedTaxCategories());
+        String[] allowedTaxCategoryAry = map.keySet().toArray(new String[0]);
+        DataValidationConstraint taxCategoryConstraint = validationHelper.createExplicitListConstraint(allowedTaxCategoryAry);
+
+        CellRangeAddressList taxCategoryCellList = new CellRangeAddressList(1, rows + 1, 5, 5);
+        DataValidation taxCategoryDataValidation = validationHelper.createValidation(taxCategoryConstraint, taxCategoryCellList);
+        taxCategoryDataValidation.setSuppressDropDownArrow(true);
+        taxCategoryDataValidation.setShowErrorBox(true);
+        taxCategoryDataValidation.setErrorStyle(DataValidation.ErrorStyle.STOP);
+        // dataValidation.createPromptBox("Title", "Message Text");
+        // dataValidation.setShowPromptBox(true);
+
+        taxCategoryDataValidation.createErrorBox("Box Title", "Please select");
+
+        return taxCategoryDataValidation;
+    }
+
     private static DataValidation getTrTypeCheckBoxValidation(DataValidationHelper validationHelper, int rows)
     {
-        DataValidationConstraint trTypeConstraint = validationHelper
-                .createExplicitListConstraint(new String[] { "SELECT", "rent", "commissions", "insurance"
-
-                , "professionalfees", "mortgageinterest", "repairs", "tax", "utilities", "depreciation", "hoa", "bankfees",
-                        "ignore" });
+        Map<String, String> map = new TreeMap<String, String>(AccountsUtil.inst().getAllowedTrTypes());
+        String[] allowedTrTypesAry = map.keySet().toArray(new String[0]);
+        DataValidationConstraint trTypeConstraint = validationHelper.createExplicitListConstraint(allowedTrTypesAry);
 
         CellRangeAddressList trTypeCellList = new CellRangeAddressList(1, rows + 1, 4, 4);
         DataValidation trTypeDataValidation = validationHelper.createValidation(trTypeConstraint, trTypeCellList);
@@ -548,6 +568,7 @@ public class AccountsMainApp
                 throw new IOException("Account is not present: " + accountName + ", List=" + dbIfc.getAccounts().keySet());
             }
         }
+        AccountsUtil.createInstance(); // Initialization
 
         XSSFWorkbook workBook = new XSSFWorkbook();
         CellStyle unlockedCellStyle = workBook.createCellStyle();
@@ -574,7 +595,6 @@ public class AccountsMainApp
             XSSFSheet sheet = workBook.createSheet(baName);
             {
                 XSSFRow currentRow = sheet.createRow(0);
-
                 int col = 0;
                 Cell cell = null;
                 cell = currentRow.createCell(col++);
@@ -593,6 +613,9 @@ public class AccountsMainApp
                 cell.setCellStyle(unlockedCellStyle);
                 cell = currentRow.createCell(col++);
                 cell.setCellValue("Property");
+                cell.setCellStyle(unlockedCellStyle);
+                cell = currentRow.createCell(col++);
+                cell.setCellValue("OtherEntity");
                 cell.setCellStyle(unlockedCellStyle);
             }
 
@@ -648,11 +671,18 @@ public class AccountsMainApp
                 cell.setCellValue(tr.getProperty());
                 cell.setCellStyle(unlockedCellStyle);
 
+                cell = currentRow.createCell(col++);
+                cell.setCellValue(tr.getOtherEntity());
+                cell.setCellStyle(unlockedCellStyle);
+
             }
             DataValidationHelper validationHelper = new XSSFDataValidationHelper(sheet);
             DataValidation trTypeDataValidation = getTrTypeCheckBoxValidation(validationHelper, trMap.size());
 
             sheet.addValidationData(trTypeDataValidation);
+
+            DataValidation taxCategoryDataValidation = getTaxCategoryCheckBoxValidation(validationHelper, trMap.size());
+            sheet.addValidationData(taxCategoryDataValidation);
             sheet.setAutoFilter(CellRangeAddress.valueOf("A1:N1"));
             sheet.lockDeleteColumns(true);
             sheet.lockDeleteRows(true);
@@ -667,9 +697,10 @@ public class AccountsMainApp
             sheet.setColumnWidth(1, 14000);
             sheet.setColumnWidth(2, 3000);
             sheet.setColumnWidth(3, 14000);
-            sheet.setColumnWidth(4, 4000);
+            sheet.setColumnWidth(4, 7000);
             sheet.setColumnWidth(5, 4000);
             sheet.setColumnWidth(6, 6000);
+            sheet.setColumnWidth(7, 6000);
             sheet.protectSheet("password");
 
             // Locks the whole sheet sheet.enableLocking();
@@ -686,6 +717,14 @@ public class AccountsMainApp
                 dirFile.mkdir();
             }
             outFile = dir + File.separator + "export_allaccounts.xlsx";
+        }
+        File outFileHandle = new File(outFile);
+        if (outFileHandle.exists())
+        {
+            DateFormat df = new SimpleDateFormat("MMddyyyy_HHmmss");
+            Date today = Calendar.getInstance().getTime();
+            String reportDate = df.format(today);
+            outFileHandle.renameTo(new File(outFile + "_" + reportDate + "_old.xlsx"));
         }
 
         FileOutputStream fileOutputStream = new FileOutputStream(outFile);

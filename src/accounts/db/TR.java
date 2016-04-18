@@ -63,12 +63,15 @@ public abstract class TR
     private String taxCategory;
     @Column(length = 50)
     private String property;
+    @Column(length = 50)
+    private String otherEntity;
 
     public void copyNonPrimaryFields(TR tr)
     {
         setTrType(tr.getTrType());
         setTaxCategory(tr.getTaxCategory());
         setProperty(tr.getProperty());
+        setOtherEntity(tr.getOtherEntity());
         setComment(tr.getComment());
         setLocked(tr.isLocked());
     }
@@ -120,6 +123,21 @@ public abstract class TR
                 return false;
             }
         }
+
+        if (getOtherEntity() == null || getOtherEntity().isEmpty())
+        {
+            if (tr.getOtherEntity() != null && !tr.getOtherEntity().isEmpty())
+            {
+                return false;
+            }
+        } else
+        {
+            if (!getOtherEntity().equals(tr.getOtherEntity()))
+            {
+                return false;
+            }
+        }
+
         if (getComment() == null || getComment().isEmpty())
         {
             if (tr.getComment() != null && !tr.getComment().isEmpty())
@@ -281,7 +299,7 @@ public abstract class TR
         {
             throw new IOException("Invalid transaction line" + line + ", Required fields=" + 8 + " Found=" + fields.length);
         }
-        // #DATE,DESCRIPTION,DEBIT,COMMENT,ISLOCKED,TRTYPE,TAXCATEGORY,PROPERTY
+        // #DATE,DESCRIPTION,DEBIT,COMMENT,ISLOCKED,TRTYPE,TAXCATEGORY,PROPERTY,otherEntity
 
         DateFormat format = new SimpleDateFormat("MM-dd-yyyy", Locale.ENGLISH);
         Date date = format.parse(fields[0]);
@@ -329,6 +347,14 @@ public abstract class TR
         {
             setProperty(tempStr);
         }
+        tempStr = fields[8];
+        if (tempStr != null)
+            tempStr = tempStr.toLowerCase().trim();
+        if (!"null".equals(tempStr))
+        {
+            setOtherEntity(tempStr);
+        }
+
     }
 
     public void init(String line, final BankStatementFormat bc) throws IOException, ParseException
@@ -462,6 +488,7 @@ public abstract class TR
         sb.append(", " + trType);
         sb.append(", " + taxCategory);
         sb.append(", " + property);
+        sb.append(", " + otherEntity);
 
         return sb.toString();
     }
@@ -477,12 +504,17 @@ public abstract class TR
         String lProperty = getProperty();
         if (lProperty == null)
             lProperty = "";
+
+        String lOtherEntity = getOtherEntity();
+        if (lOtherEntity == null)
+            lOtherEntity = "";
+
         String lComment = getComment();
         if (lComment == null)
             lComment = "";
         final StringBuffer sb = new StringBuffer();
         sb.append(new SimpleDateFormat("MM-dd-yyyy").format(getDate()) + "," + getDescription() + "," + getDebit() + ","
-                + lComment + "," + isLocked() + "," + lTrType + "," + lTaxCategory + "," + lProperty);
+                + lComment + "," + isLocked() + "," + lTrType + "," + lTaxCategory + "," + lProperty + "," + lOtherEntity);
 
         return sb.toString();
     }
@@ -518,6 +550,19 @@ public abstract class TR
             return;
         property = property.trim().toLowerCase();
         this.property = property;
+    }
+
+    public String getOtherEntity()
+    {
+        return this.otherEntity;
+    }
+
+    public void setOtherEntity(String otherEntity)
+    {
+        if (otherEntity == null)
+            return;
+        otherEntity = otherEntity.trim().toLowerCase();
+        this.otherEntity = otherEntity;
     }
 
     public static void main(final String[] args)

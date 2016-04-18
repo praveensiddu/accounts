@@ -96,6 +96,7 @@ public class ExcelUtils
                 tr.setTrType(row.getCell(4).getStringCellValue());
                 tr.setTaxCategory(row.getCell(5).getStringCellValue());
                 tr.setProperty(row.getCell(6).getStringCellValue());
+                tr.setOtherEntity(row.getCell(7).getStringCellValue());
                 tr.setTrId();
                 mapTr.put(tr.getTrId(), tr);
 
@@ -137,6 +138,7 @@ public class ExcelUtils
                 tr.setTrType(row.getCell(4).getStringCellValue());
                 tr.setTaxCategory(row.getCell(5).getStringCellValue());
                 tr.setProperty(row.getCell(6).getStringCellValue());
+                tr.setOtherEntity(row.getCell(7).getStringCellValue());
                 tr.setTrId();
                 mapTr.put(tr.getTrId(), tr);
 
@@ -251,6 +253,15 @@ public class ExcelUtils
                         throw new AccountExp(AccountExp.ACCOUNT_MAX_LIMIT, "Comment is too long=" + trToImport.getComment()
                                 + " in " + bankAccount + "\nMax limit=" + AccountsUtil.COMMENT_MAXLEN);
                     }
+
+                    if (trToImport.getOtherEntity() != null
+                            && trToImport.getOtherEntity().length() > AccountsUtil.OTHERENTITY_MAXLEN)
+                    {
+                        throw new AccountExp(AccountExp.ACCOUNT_MAX_LIMIT,
+                                "OtherEntity is too long=" + trToImport.getOtherEntity() + " in " + bankAccount + "\nMax limit="
+                                        + AccountsUtil.OTHERENTITY_MAXLEN);
+                    }
+
                     importTrList.put(trId, trToImport);
                 }
             }

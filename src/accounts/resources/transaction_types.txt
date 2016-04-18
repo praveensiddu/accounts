@@ -10,3 +10,13 @@ depreciation
 hoa
 bankfees
 ignore
+c_website
+c_off_exp
+c_internet
+c_mobile
+c_auto
+c_donate
+c_license
+c_legalfees
+c_meals
+c_entertainment

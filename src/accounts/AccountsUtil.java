@@ -9,7 +9,8 @@ import java.util.Map;
 
 public class AccountsUtil
 {
-    public static final int     COMMENT_MAXLEN = 100;// should be same as in DB.
+    public static final int     COMMENT_MAXLEN     = 100;// should be same as in DB.
+    public static final int     OTHERENTITY_MAXLEN = 50; // should be same as in DB.
     private static AccountsUtil inst_;
 
     public static AccountsUtil createInstance() throws IOException
