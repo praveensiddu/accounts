@@ -909,7 +909,7 @@ public class AccountsMainApp
             {
                 System.out.println("    " + tr);
             }
-            System.out.println("Import check succeeded.");
+            System.out.println("Import check succeeded. Number of entries updated=" + newTrList.size());
             if (commit)
             {
                 int count = dbIfc.updateTransactions(newTrList);
