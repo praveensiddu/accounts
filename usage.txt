@@ -1,3 +1,37 @@
--A listacs -file D:\tmp\AccountsDB\acexp.csv -accountname junk  -bankstatement C:\Users\myfirstname\workspace\accounts\data\ElegantHomes_2014.CSV -taxconfig data/TaxConfigCalvaryBattery.txt -year 2014
+
+One time activities
+--------------------
+Setup a directory for the user where his accounts will be stored
+Give info about how user handles his accounts and properties
 
 
+Input
+--------
+Create list of bank accounts
+Create list of rental properties
+import bank statements( understanads various banks wellsfargo , dcu, amex ....)
+
+
+Processing
+-----------
+The accounts software does classify 
+
+Output
+------------
+Tax Form Schedule-E
+Excel sheet 
+
+
+
+Commands used
+-A createacs -file D:\temp\cpa\bankaccounts.csv
+-A listacs
+-A createprops -file D:\temp\cpa\properties.csv
+-A listprops
+-A import2db -bankstatement D:\temp\cpa\2015_bank_statements_arun\lacy_dcu_2015.csv -accountname 8083lacy_dcu
+
+-A classifyindb -taxconfig <f> -year <yyyy>
+
+-A exp2excel 
+
+-A classifyindb -taxconfig D:\temp\cpa\User1\Praveen_TaxConfig.txt  -year 2015

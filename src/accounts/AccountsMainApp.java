@@ -900,7 +900,7 @@ public class AccountsMainApp
         Map<TRId, TR> newTrList = import2DBCheck(bs);
         if (newTrList.size() == 0)
         {
-            System.out.println("There are no changes to be committed.");
+            System.out.println("No new transactions found in the input statement. Hence changes to be committed.");
         } else
         {
             System.out.println("\n\nRecords to be committed:");
@@ -1001,6 +1001,7 @@ public class AccountsMainApp
                 List<BankAccount> acL = DBImpl.parseAccountFile(argHash.get("file"));
                 DBIfc dbi = DBFactory.createDBIfc();
                 dbi.createAndConnectDB(null);
+                int initialCount = dbi.getAccounts().size();
                 for (BankAccount ac : acL)
                 {
                     if (dbi.getAccounts() != null && dbi.getAccounts().containsKey(ac.getName()))
@@ -1015,6 +1016,7 @@ public class AccountsMainApp
                 {
                     System.out.println(ba);
                 }
+                System.out.println("Number of accounts created=" + (dbi.getAccounts().size() - initialCount));
             } else if (LISTACS.equalsIgnoreCase(action))
             {
                 DBIfc dbi = DBFactory.createDBIfc();
@@ -1032,6 +1034,7 @@ public class AccountsMainApp
                 List<BankAccount> acL = DBImpl.parseAccountFile(argHash.get("file"));
                 DBIfc dbi = DBFactory.createDBIfc();
                 dbi.createAndConnectDB(null);
+                int initialCount = dbi.getAccounts().size();
                 for (BankAccount ac : acL)
                 {
                     dbi.deleteBankAccount(ac.getName());
@@ -1040,6 +1043,7 @@ public class AccountsMainApp
                 {
                     System.out.println(ba);
                 }
+                System.out.println("Number of accounts deleted=" + (initialCount - dbi.getAccounts().size()));
             } else if (CREATEPROPS.equalsIgnoreCase(action))
             {
                 if (argHash.get("file") == null)
