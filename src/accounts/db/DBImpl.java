@@ -422,7 +422,7 @@ public class DBImpl implements DBIfc
     }
 
     @Override
-    public int updateTransactions(Map<TRId, TR> trs) throws DBException
+    public int updateTransactions(Map<TRId, TR> trs, boolean checkLocked) throws DBException
     {
 
         EntityManager em = factory.createEntityManager();
@@ -438,7 +438,7 @@ public class DBImpl implements DBIfc
                     em.persist(tr);
                 } else
                 {
-                    if (!dbTr.isLocked())
+                    if (checkLocked && !dbTr.isLocked())
                     {
                         dbTr.copyNonPrimaryFields(tr);
                         em.merge(dbTr);

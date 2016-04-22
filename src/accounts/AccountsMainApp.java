@@ -424,7 +424,7 @@ public class AccountsMainApp
             }
             System.out.println("Reading transactions for " + ba.getName());
             Map<TRId, TR> trs = readTransactions(dbIfc, ba, outfile);
-            int count = dbIfc.updateTransactions(trs);
+            int count = dbIfc.updateTransactions(trs, false);
             System.out.println("Updated transactions for " + ba.getName() + ", Count=" + count);
         }
         System.out.println("Import transactions completed ");
@@ -506,7 +506,13 @@ public class AccountsMainApp
                 {
                     System.out.println("Committing BankAccount=" + bankAccount);
                     Map<TRId, TR> changedTrMap = changedBaMap.get(bankAccount);
-                    int count = dbIfc.updateTransactions(changedTrMap);
+                    for (TR tr : changedTrMap.values())
+                    {
+                        // To Mark that it was manually updated and should not be changed by automatic classification
+                        tr.setLocked(true);
+                    }
+                    int count = dbIfc.updateTransactions(changedTrMap, false);
+                    System.out.println("Number of records updated=" + count);
                 }
 
             } else
@@ -640,6 +646,9 @@ public class AccountsMainApp
                 cell = currentRow.createCell(col++);
                 cell.setCellValue("OtherEntity");
                 cell.setCellStyle(unlockedCellStyle);
+                cell = currentRow.createCell(col++);
+                cell.setCellValue("ManuallyUpdated");
+                cell.setCellStyle(unlockedCellStyle);
             }
 
             CellStyle dateCellStyle = workBook.createCellStyle();
@@ -696,6 +705,13 @@ public class AccountsMainApp
 
                 cell = currentRow.createCell(col++);
                 cell.setCellValue(tr.getOtherEntity());
+                cell.setCellStyle(unlockedCellStyle);
+
+                cell = currentRow.createCell(col++);
+                if (tr.isLocked())
+                {
+                    cell.setCellValue("YES");
+                }
                 cell.setCellStyle(unlockedCellStyle);
 
             }
@@ -859,7 +875,7 @@ public class AccountsMainApp
                     }
                 }
             }
-            dbIfc.updateTransactions(trMap);
+            dbIfc.updateTransactions(trMap, true);
         }
         return dbIfc;
     }
@@ -941,7 +957,7 @@ public class AccountsMainApp
             System.out.println("Import check succeeded. Number of entries updated=" + newTrList.size());
             if (commit)
             {
-                int count = dbIfc.updateTransactions(newTrList);
+                int count = dbIfc.updateTransactions(newTrList, true);
                 System.out.println("updated transaction count=" + count);
             } else
             {
@@ -983,6 +999,7 @@ public class AccountsMainApp
     public static final String CLASSIFYINDB     = "classifyindb";
     public static final String EXP2EXCEL        = "exp2excel";
     public static final String IMPEXCEL         = "impexcel";
+    public static final String CLASSIFY_EXP     = "classify_exp";
 
     public static final String              CREATEACS    = "createacs";
     public static final String              LISTACS      = "listacs";
@@ -1207,6 +1224,20 @@ public class AccountsMainApp
             } else if (IMPEXCEL.equalsIgnoreCase(action))
             {
                 importFromExcel(argHash.get("accountname"), argHash.get("file"), argHash.get("commit") != null);
+
+            } else if (CLASSIFY_EXP.equalsIgnoreCase(action))
+            {
+                if (argHash.get("taxconfig") == null)
+                {
+                    usage("-taxconfig argument is required.");
+                }
+                if (argHash.get("year") == null)
+                {
+                    usage("-year argument is required.");
+                }
+                final TaxConfig tc = new TaxConfig(argHash.get("taxconfig"));
+                DBIfc dbIfc = classifyindb(tc);
+                exportToExcel(argHash.get("accountname"), argHash.get("file"), argHash.get("filter"));
 
             } else
             {

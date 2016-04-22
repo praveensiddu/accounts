@@ -139,6 +139,11 @@ public class ExcelUtils
                 tr.setTaxCategory(row.getCell(5).getStringCellValue());
                 tr.setProperty(row.getCell(6).getStringCellValue());
                 tr.setOtherEntity(row.getCell(7).getStringCellValue());
+                String lockedStr = row.getCell(7).getStringCellValue();
+                if ("YES".equalsIgnoreCase(lockedStr) || "TRUE".equalsIgnoreCase(lockedStr))
+                {
+                    tr.setLocked(true);
+                }
                 tr.setTrId();
                 mapTr.put(tr.getTrId(), tr);
 
