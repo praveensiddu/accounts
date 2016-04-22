@@ -9,6 +9,7 @@ public class RuleRecord
     private String descStartsWith = null;
     private String taxCategory    = null;
     private String property       = null;
+    private String otherEntity    = null;
     private int    lineno         = 0;
 
     public RuleRecord createNew()
@@ -16,7 +17,15 @@ public class RuleRecord
         final RuleRecord rr = new RuleRecord();
         rr.setCurrentAccount(currentAccount);
         rr.setProperty(property);
+        rr.setOtherEntity(otherEntity);
         rr.setTaxCategory(taxCategory);
+        return rr;
+    }
+
+    public RuleRecord createFresh()
+    {
+        final RuleRecord rr = new RuleRecord();
+        rr.setCurrentAccount(currentAccount);
         return rr;
     }
 
@@ -36,6 +45,8 @@ public class RuleRecord
         sb.append("==> tt=" + trType);
         sb.append(", tc=" + taxCategory);
         sb.append(", p=" + property);
+        sb.append(", oE=" + otherEntity);
+
         return sb.toString();
 
     }
@@ -114,6 +125,16 @@ public class RuleRecord
     public void setLineno(final int lineno)
     {
         this.lineno = lineno;
+    }
+
+    public String getOtherEntity()
+    {
+        return otherEntity;
+    }
+
+    public void setOtherEntity(String otherEntity)
+    {
+        this.otherEntity = otherEntity;
     }
 
 }

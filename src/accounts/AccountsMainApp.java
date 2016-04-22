@@ -497,6 +497,7 @@ public class AccountsMainApp
                 {
                     System.out.println("    " + tr);
                 }
+                System.out.println("Number of changed records=" + changedTrMap.size());
             }
             System.out.println("Import check succeeded.");
             if (commit)
@@ -514,6 +515,28 @@ public class AccountsMainApp
             }
         }
 
+    }
+
+    private static DataValidation getPropertyCheckBoxValidation(DataValidationHelper validationHelper,
+                                                                int rows) throws DBException
+    {
+        DBIfc dbIfc = DBFactory.createDBIfc();
+
+        Map<String, RealProperty> map = new TreeMap<String, RealProperty>(dbIfc.getProperties());
+        String[] allowedTaxCategoryAry = map.keySet().toArray(new String[0]);
+        DataValidationConstraint propertyConstraint = validationHelper.createExplicitListConstraint(allowedTaxCategoryAry);
+
+        CellRangeAddressList taxCategoryCellList = new CellRangeAddressList(1, rows + 1, 6, 6);
+        DataValidation propDataValidation = validationHelper.createValidation(propertyConstraint, taxCategoryCellList);
+        propDataValidation.setSuppressDropDownArrow(true);
+        propDataValidation.setShowErrorBox(true);
+        propDataValidation.setErrorStyle(DataValidation.ErrorStyle.STOP);
+        // dataValidation.createPromptBox("Title", "Message Text");
+        // dataValidation.setShowPromptBox(true);
+
+        propDataValidation.createErrorBox("Box Title", "Please select");
+
+        return propDataValidation;
     }
 
     private static DataValidation getTaxCategoryCheckBoxValidation(DataValidationHelper validationHelper, int rows)
@@ -683,6 +706,10 @@ public class AccountsMainApp
 
             DataValidation taxCategoryDataValidation = getTaxCategoryCheckBoxValidation(validationHelper, trMap.size());
             sheet.addValidationData(taxCategoryDataValidation);
+
+            DataValidation propertyDataValidation = getPropertyCheckBoxValidation(validationHelper, trMap.size());
+            sheet.addValidationData(propertyDataValidation);
+
             sheet.setAutoFilter(CellRangeAddress.valueOf("A1:N1"));
             sheet.lockDeleteColumns(true);
             sheet.lockDeleteRows(true);
@@ -814,6 +841,7 @@ public class AccountsMainApp
                         if (tr.getDescription().contains(rr.getDescContains()))
                         {
                             tr.setProperty(rr.getProperty());
+                            tr.setOtherEntity(rr.getOtherEntity());
                             tr.setTaxCategory(rr.getTaxCategory());
                             tr.setTrType(rr.getTrType());
                             break;
@@ -823,6 +851,7 @@ public class AccountsMainApp
                         if (tr.getDescription().startsWith(rr.getDescStartsWith()))
                         {
                             tr.setProperty(rr.getProperty());
+                            tr.setOtherEntity(rr.getOtherEntity());
                             tr.setTaxCategory(rr.getTaxCategory());
                             tr.setTrType(rr.getTrType());
                             break;
@@ -900,7 +929,7 @@ public class AccountsMainApp
         Map<TRId, TR> newTrList = import2DBCheck(bs);
         if (newTrList.size() == 0)
         {
-            System.out.println("No new transactions found in the input statement. Hence changes to be committed.");
+            System.out.println("No new transactions found in the input statement. Hence no changes to be committed.");
         } else
         {
             System.out.println("\n\nRecords to be committed:");

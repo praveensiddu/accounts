@@ -14,14 +14,13 @@ public class TaxConfig
     public static final String INCLUDE_FILE     = "include_file";
     public static final String DESC_CONTAINS    = "desc_contains";
     public static final String DESC_STARTSWITH  = "desc_startswith";
+    public static final String CLOSERULE        = "closerule";
 
     public static final String TAX_CATEGORY = "tax_category";
     public static final String PROPERTY     = "property";
+    public static final String OTHERENTITY  = "otherentity";
 
-    public static final String                 RENTAL          = "rental";
-    public static final String                 PERSONAL        = "personal";
-    public static final String                 REALESTATEAGENT = "realestateagent";
-    private Map<String, ArrayList<RuleRecord>> accountsMap     = new HashMap<String, ArrayList<RuleRecord>>();
+    private Map<String, ArrayList<RuleRecord>> accountsMap = new HashMap<String, ArrayList<RuleRecord>>();
 
     public TaxConfig(final String file) throws IOException
     {
@@ -31,6 +30,7 @@ public class TaxConfig
         {
             String currentAccount = null;
             String currentProperty = null;
+            String currOtherEntity = null;
 
             int lineno = 1;
             RuleRecord rr = new RuleRecord();
@@ -46,7 +46,7 @@ public class TaxConfig
                 {
                     continue;
                 }
-                String[] fields = line.split("=");
+                String[] fields = line.split("=", -1);
                 if (fields.length != 2)
                 {
                     throw new IOException("invalid format at line=" + lineno + ", Expected format key=value. Found=" + line);
@@ -55,6 +55,13 @@ public class TaxConfig
                 String key = fields[0].trim().toLowerCase();
                 String valueAsIs = fields[1].trim();
                 String value = fields[1].trim().toLowerCase();
+                if (value.isEmpty())
+                {
+                    if (!PROPERTY.equals(key) && !OTHERENTITY.equals(key) && !TAX_CATEGORY.equals(key))
+                    {
+                        throw new IOException("invalid format at line=" + lineno + ", Expected format key=value. Found=" + line);
+                    }
+                }
                 if (currentAccount == null)
                 {
                     if (!BACCOUNT.equals(key))
@@ -66,14 +73,18 @@ public class TaxConfig
                 if (BACCOUNT.equals(key))
                 {
                     currentAccount = value;
+                    // Empty rule. Only bank account name is copied
+                    rr = rr.createFresh();
+                    rr.setCurrentAccount(currentAccount);
                     continue;
                 } else if (TRANSACTION_TYPE.equals(key))
                 {
-                    if (currentProperty == null)
-                        throw new IOException("PROPERTY should be set before TRANSACTION_TYPE");
+                    // if (currentProperty == null && currOtherEntity == null)
+                    // throw new IOException("PROPERTY or OTHERENTITY should be set before TRANSACTION_TYPE");
                     // it is a new record. Create a new record
                     rr = rr.createNew();
                     rr.setProperty(currentProperty);
+                    rr.setOtherEntity(currOtherEntity);
                     rr.setLineno(lineno);
 
                     rr.setTrType(value);
@@ -85,9 +96,12 @@ public class TaxConfig
                         accountsMap.put(currentAccount, arr);
                     }
                     arr.add(rr);
+                } else if (CLOSERULE.equals(key))
+                {
+                    // Empty rule. Only bank account name is copied
+                    rr = rr.createFresh();
                 } else if (INCLUDE_FILE.equals(key))
                 {
-
                     ArrayList<RuleRecord> arr = accountsMap.get(currentAccount);
                     if (arr == null)
                     {
@@ -97,7 +111,9 @@ public class TaxConfig
                     TaxConfigInclude tcf = new TaxConfigInclude(valueAsIs);
                     for (RuleRecord rrinclude : tcf.getRuleRecordList())
                     {
-                        rrinclude.setProperty(rr.getProperty());
+                        rrinclude.setProperty(currentProperty);
+                        rrinclude.setOtherEntity(currOtherEntity);
+                        rrinclude.setTaxCategory(rr.getTaxCategory());
                         arr.add(rrinclude);
                     }
 
@@ -113,6 +129,9 @@ public class TaxConfig
                 } else if (PROPERTY.equals(key))
                 {
                     currentProperty = value;
+                } else if (OTHERENTITY.equals(key))
+                {
+                    currOtherEntity = value;
                 }
 
             }

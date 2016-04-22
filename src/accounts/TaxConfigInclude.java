@@ -77,8 +77,10 @@ public class TaxConfigInclude
                     rr.setTaxCategory(value);
                 } else if (TaxConfig.PROPERTY.equals(key))
                 {
-
                     throw new IOException("PROPERTY should not be in include file");
+                } else if (TaxConfig.OTHERENTITY.equals(key))
+                {
+                    throw new IOException("OTHERENTITY should not be in include file");
                 }
 
             }
