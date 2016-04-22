@@ -990,6 +990,8 @@ public class AccountsMainApp
         System.out.println("    -A classifyindb -taxconfig <f> -year <yyyy>\n");
         System.out.println("    -A exp2excel [-accountname <n>] [-file <f.xlsx>] [-filter \"tr types\"]\n");
         System.out.println("    -A impexcel [-commit] [-accountname <n>] [-file <f.xlsx>]\n");
+        System.out.println("    -A classify_exp -taxconfig <f> -year <yyyy>\n");
+
         System.exit(1);
     }
 
