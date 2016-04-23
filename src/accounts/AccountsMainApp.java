@@ -616,7 +616,7 @@ public class AccountsMainApp
         CellStyle topAlignCellStyle = workBook.createCellStyle();
         topAlignCellStyle.setVerticalAlignment(CellStyle.VERTICAL_TOP);
 
-        Map<String, BankAccount> baMap = dbIfc.getAccounts();
+        Map<String, BankAccount> baMap = new TreeMap<String, BankAccount>(dbIfc.getAccounts());
 
         for (BankAccount ba : baMap.values())
         {

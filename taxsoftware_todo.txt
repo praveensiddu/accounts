@@ -1,7 +1,8 @@
 delete all transaction in an account
+tabs in sorted order
+manual update flag remove option to user
 remove unwanted usage
-Add group to property export 
-Test debit equals
+amex bank statement format should change
 Make include tax config relative
 company accounts consolidate
 delete all transactions in a bank
