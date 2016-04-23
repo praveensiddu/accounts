@@ -1,6 +1,7 @@
+Add group to property export 
+Add amount equals
+Make include tax config relative
 company accounts consolidate
-manual update only column
-combine classifyandexport
 
 exp2excel to have ignore category option
 thorough test of mkuniq feature with exporttr, importtr and import2db

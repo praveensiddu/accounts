@@ -438,7 +438,14 @@ public class DBImpl implements DBIfc
                     em.persist(tr);
                 } else
                 {
-                    if (checkLocked && !dbTr.isLocked())
+                    if (dbTr.isLocked())
+                    {
+                        if (checkLocked == false)
+                        {
+                            dbTr.copyNonPrimaryFields(tr);
+                            em.merge(dbTr);
+                        }
+                    } else
                     {
                         dbTr.copyNonPrimaryFields(tr);
                         em.merge(dbTr);
