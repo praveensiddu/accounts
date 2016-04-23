@@ -36,7 +36,30 @@ public class DBImpl implements DBIfc
         {
             throw new IOException("Directory not present=" + dir);
         }
-        String configDir = dir + File.separator + "config/";
+
+        String classifyRulesDir = dir + File.separator + "classify_rules" + File.separator;
+        File classifyRulesDirFile = new File(classifyRulesDir);
+        classifyRulesDirFile.mkdir();
+        if (!classifyRulesDirFile.exists())
+        {
+            throw new IOException("Unable to create directory=" + classifyRulesDirFile);
+        }
+
+        String bStmtDir = dir + File.separator + "bank_stmts" + File.separator;
+        File bStmtDirFile = new File(bStmtDir);
+        bStmtDirFile.mkdir();
+        if (!bStmtDirFile.exists())
+        {
+            throw new IOException("Unable to create directory=" + bStmtDir);
+        }
+        for (int i = 2014; i < 2030; i++)
+        {
+            String yearDir = dir + File.separator + "bank_stmts" + File.separator + i + File.separator;
+            File yearDirFile = new File(yearDir);
+            yearDirFile.mkdir();
+        }
+
+        String configDir = dir + File.separator + "config" + File.separator;
         File configDirFile = new File(configDir);
         configDirFile.mkdir();
         if (!configDirFile.exists())

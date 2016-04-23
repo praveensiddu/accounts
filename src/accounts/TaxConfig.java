@@ -1,6 +1,7 @@
 package accounts;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,12 +21,14 @@ public class TaxConfig
     public static final String TAX_CATEGORY = "tax_category";
     public static final String PROPERTY     = "property";
     public static final String OTHERENTITY  = "otherentity";
+    private File               configFile   = null;
 
     private Map<String, ArrayList<RuleRecord>> accountsMap = new HashMap<String, ArrayList<RuleRecord>>();
 
     public TaxConfig(final String file) throws IOException
     {
         final FileReader fr = new FileReader(file);
+        configFile = new File(file);
         final BufferedReader br = new BufferedReader(fr);
         try
         {
@@ -108,6 +111,11 @@ public class TaxConfig
                     {
                         arr = new ArrayList<RuleRecord>();
                         accountsMap.put(currentAccount, arr);
+                    }
+                    File valFile = new File(valueAsIs);
+                    if (!valFile.isAbsolute())
+                    {
+                        valueAsIs = this.getConfigFile().getParent() + File.separator + valueAsIs;
                     }
                     TaxConfigInclude tcf = new TaxConfigInclude(valueAsIs);
                     for (RuleRecord rrinclude : tcf.getRuleRecordList())
@@ -194,6 +202,11 @@ public class TaxConfig
     public void setAccountsMap(final Map<String, ArrayList<RuleRecord>> accountsMap)
     {
         this.accountsMap = accountsMap;
+    }
+
+    public File getConfigFile()
+    {
+        return configFile;
     }
 
 }

@@ -1,6 +1,7 @@
 package accounts;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -8,7 +9,8 @@ import java.util.List;
 
 public class TaxConfigInclude
 {
-    private List<RuleRecord> arr = new ArrayList<RuleRecord>();
+    private List<RuleRecord> arr        = new ArrayList<RuleRecord>();
+    private File             configFile = null;
 
     public List<RuleRecord> getRuleRecordList()
     {
@@ -18,6 +20,8 @@ public class TaxConfigInclude
     public TaxConfigInclude(final String file) throws IOException
     {
         final FileReader fr = new FileReader(file);
+
+        configFile = new File(file);
         final BufferedReader br = new BufferedReader(fr);
         try
         {
@@ -60,6 +64,12 @@ public class TaxConfigInclude
                     arr.add(rr);
                 } else if (TaxConfig.INCLUDE_FILE.equals(key))
                 {
+                    File valFile = new File(valueAsIs);
+                    if (!valFile.isAbsolute())
+                    {
+                        valueAsIs = this.getConfigFile().getParent() + File.separator + valueAsIs;
+                    }
+
                     TaxConfigInclude tcf = new TaxConfigInclude(valueAsIs);
                     for (RuleRecord rrinclude : tcf.getRuleRecordList())
                     {
@@ -125,6 +135,11 @@ public class TaxConfigInclude
             e.printStackTrace();
         }
 
+    }
+
+    public File getConfigFile()
+    {
+        return configFile;
     }
 
 }
