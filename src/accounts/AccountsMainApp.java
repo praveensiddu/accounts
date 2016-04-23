@@ -529,6 +529,11 @@ public class AccountsMainApp
         DBIfc dbIfc = DBFactory.createDBIfc();
 
         Map<String, RealProperty> map = new TreeMap<String, RealProperty>(dbIfc.getProperties());
+        Map<String, IGroup> gmap = dbIfc.getGropusMap();
+        for (String gName : gmap.keySet())
+        {
+            map.put(gName, null);
+        }
         String[] allowedTaxCategoryAry = map.keySet().toArray(new String[0]);
         DataValidationConstraint propertyConstraint = validationHelper.createExplicitListConstraint(allowedTaxCategoryAry);
 
