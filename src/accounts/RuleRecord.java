@@ -10,6 +10,7 @@ public class RuleRecord
     private String taxCategory    = null;
     private String property       = null;
     private String otherEntity    = null;
+    private Float  debitEquals    = (float) 0;
     private int    lineno         = 0;
 
     public RuleRecord createNew()
@@ -135,6 +136,16 @@ public class RuleRecord
     public void setOtherEntity(String otherEntity)
     {
         this.otherEntity = otherEntity;
+    }
+
+    public Float getDebitEquals()
+    {
+        return debitEquals;
+    }
+
+    public void setDebitEquals(Float debitEquals)
+    {
+        this.debitEquals = debitEquals;
     }
 
 }

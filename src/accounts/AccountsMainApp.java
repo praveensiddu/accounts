@@ -877,6 +877,16 @@ public class AccountsMainApp
                             tr.setTrType(rr.getTrType());
                             break;
                         }
+                    } else if (rr.getDebitEquals() != 0)
+                    {
+                        if (tr.getDebit() == rr.getDebitEquals())
+                        {
+                            tr.setProperty(rr.getProperty());
+                            tr.setOtherEntity(rr.getOtherEntity());
+                            tr.setTaxCategory(rr.getTaxCategory());
+                            tr.setTrType(rr.getTrType());
+                            break;
+                        }
                     }
                 }
             }
@@ -953,17 +963,17 @@ public class AccountsMainApp
             System.out.println("No new transactions found in the input statement. Hence no changes to be committed.");
         } else
         {
-            System.out.println("\n\nRecords to be committed:");
+            System.out.println("\n\nRecords in the input:");
 
             for (TR tr : newTrList.values())
             {
                 System.out.println("    " + tr);
             }
-            System.out.println("Import check succeeded. Number of entries updated=" + newTrList.size());
+            System.out.println("Import check succeeded. Number of entries in input=" + newTrList.size());
             if (commit)
             {
                 int count = dbIfc.updateTransactions(newTrList, true);
-                System.out.println("updated transaction count=" + count);
+                System.out.println("Committed transaction count=" + count);
             } else
             {
 
@@ -988,9 +998,9 @@ public class AccountsMainApp
         System.out.println("    -A DELETEPROPS -file <csv>\n");
         System.out.println("    -A creategroups -file <csv>");
         System.out.println("    -A deletegroups -file <csv>\n");
-        System.out.println("    -A parse -bankstatement <csvfile> -accountname <n> [-bankstformat <f>]\n");
+        System.out.println("    (Unit test only)-A parse -bankstatement <csvfile> -accountname <n> [-bankstformat <f>]\n");
         System.out.println(
-                "    -A parseandclassify -bankstatement <csvfile> -accountname <n> -taxconfig <f> [-bankstformat <f> ]\n");
+                "    (unit test only)-A parseandclassify -bankstatement <csvfile> -accountname <n> -taxconfig <f> [-bankstformat <f> ]\n");
         System.out.println("    -A import2db -bankstatement <csvfile> -accountname <n> [-commit]\n");
         System.out.println("    -A classifyindb -taxconfig <f> -year <yyyy>\n");
         System.out.println("    -A exp2excel [-accountname <n>] [-file <f.xlsx>] [-filter \"tr types\"]\n");

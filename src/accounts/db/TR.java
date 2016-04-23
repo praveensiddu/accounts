@@ -357,7 +357,7 @@ public abstract class TR
 
     }
 
-    public void init(String line, final BankStatementFormat bc) throws IOException, ParseException
+    public void init(String line, final BankStatementFormat bc) throws IOException, DBException
     {
         line = line.toLowerCase().trim();
         if (line.isEmpty())
@@ -376,7 +376,14 @@ public abstract class TR
             fields[i] = trimQuote(fields[i]);
         }
         DateFormat format = new SimpleDateFormat(bc.getDateFormat(), Locale.ENGLISH);
-        Date date = format.parse(fields[bc.getDateIndex()]);
+        Date date = null;
+        try
+        {
+            date = format.parse(fields[bc.getDateIndex()]);
+        } catch (ParseException ex)
+        {
+            throw new DBException(DBException.INVALID_INPUT, ex.getMessage() + ", Expected format=" + bc.getDateFormat());
+        }
 
         setDate(date);
 

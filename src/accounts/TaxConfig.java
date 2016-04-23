@@ -14,6 +14,7 @@ public class TaxConfig
     public static final String INCLUDE_FILE     = "include_file";
     public static final String DESC_CONTAINS    = "desc_contains";
     public static final String DESC_STARTSWITH  = "desc_startswith";
+    public static final String DEBIT_EQUALS     = "debit_equals";
     public static final String CLOSERULE        = "closerule";
 
     public static final String TAX_CATEGORY = "tax_category";
@@ -123,6 +124,10 @@ public class TaxConfig
                 } else if (DESC_STARTSWITH.equals(key))
                 {
                     rr.setDescStartsWith(value);
+                } else if (DEBIT_EQUALS.equals(key))
+                {
+                    Float debitVal = new Float(value).floatValue();
+                    rr.setDebitEquals(debitVal);
                 } else if (TAX_CATEGORY.equals(key))
                 {
                     rr.setTaxCategory(value);
