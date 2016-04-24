@@ -1,0 +1,3 @@
+#bankaccountname,bank(Make sure the config directory has a file with suffix _statement_format.txt)
+# Example if bank name is dcu then the file config/dcu_statement_format.txt should specify stmt format
+#9563street1_DCU,dcu

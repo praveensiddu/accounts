@@ -588,6 +588,14 @@ public class AccountsMainApp
         return trTypeDataValidation;
     }
 
+    private static void deleteTrs(String accountName) throws DBException, IOException
+    {
+        DBIfc dbi = DBFactory.createDBIfc();
+        dbi.createAndConnectDB(null);
+        BankAccount ba = dbi.getAccounts().get(accountName);
+        dbi.deleteTransactions(ba.getTrTableId());
+    }
+
     private static void exportToExcel(String accountName, String file, String filter) throws DBException, IOException
     {
         DBIfc dbIfc = DBFactory.createDBIfc();
@@ -839,6 +847,30 @@ public class AccountsMainApp
         System.out.println("Export transactions completed.");
     }
 
+    private static List<BankAccount> importMultiple2DB(final String dir, boolean commit) throws ParseException, IOException,
+                                                                                         DBException
+    {
+        DBIfc dbIfc = DBFactory.createDBIfc();
+
+        dbIfc.createAndConnectDB(null);
+
+        List<BankAccount> foundStmts = new ArrayList<BankAccount>();
+
+        for (BankAccount ba : dbIfc.getAccounts().values())
+        {
+            // TBD Looks for only lowercase files.
+            File stmtFile = new File(dir + File.separator + ba.getName() + ".csv");
+            if (stmtFile.isFile())
+            {
+                foundStmts.add(ba);
+                final BankStatement bs = new BankStatement(stmtFile.getAbsolutePath(), ba.getName(), null);
+
+                checkAndCommit(bs, commit);
+            }
+        }
+        return foundStmts;
+    }
+
     private static DBIfc classifyindb(final TaxConfig tc) throws DBException, IOException
     {
         DBIfc dbIfc = DBFactory.createDBIfc();
@@ -940,16 +972,16 @@ public class AccountsMainApp
         DBIfc dbIfc = DBFactory.createDBIfc();
 
         Map<TRId, TR> newTrList = new HashMap<>();
-        Map<TRId, TR> inputTrList = bs.getTrs();
-        Map<TRId, TR> dbTrList = dbIfc.getTransactions(bs.getBankAccount().getTrTableId());
-        for (TRId trId : inputTrList.keySet())
+        Map<TRId, TR> inputTrMap = bs.getTrs();
+        Map<TRId, TR> dbTrMap = dbIfc.getTransactions(bs.getBankAccount().getTrTableId());
+        for (TRId trId : inputTrMap.keySet())
         {
-            if (dbTrList.containsKey(trId))
+            if (dbTrMap.containsKey(trId))
             {
                 // It is already in database.
                 continue;
             }
-            newTrList.put(trId, inputTrList.get(trId));
+            newTrList.put(trId, inputTrMap.get(trId));
         }
         return newTrList;
     }
@@ -960,10 +992,11 @@ public class AccountsMainApp
         Map<TRId, TR> newTrList = import2DBCheck(bs);
         if (newTrList.size() == 0)
         {
-            System.out.println("No new transactions found in the input statement. Hence no changes to be committed.");
+            System.out.println("No new transactions found in the input statement. Hence no changes to be committed. Bank="
+                    + bs.getBankAccount().getName());
         } else
         {
-            System.out.println("\n\nRecords in the input:");
+            System.out.println("\n\nRecords in the input for " + bs.getBankAccount().getName() + " :");
 
             for (TR tr : newTrList.values())
             {
@@ -998,10 +1031,12 @@ public class AccountsMainApp
         System.out.println("    -A DELETEPROPS -file <csv>\n");
         System.out.println("    -A creategroups -file <csv>");
         System.out.println("    -A deletegroups -file <csv>\n");
+        System.out.println("    -A deletetrs -accountname <n>\n");
         System.out.println("    (Unit test only)-A parse -bankstatement <csvfile> -accountname <n> [-bankstformat <f>]\n");
         System.out.println(
                 "    (unit test only)-A parseandclassify -bankstatement <csvfile> -accountname <n> -taxconfig <f> [-bankstformat <f> ]\n");
-        System.out.println("    -A import2db -bankstatement <csvfile> -accountname <n> [-commit]\n");
+        System.out.println(
+                "    -A import2db {-dir <dirwithstatements> | {-bankstatement <csvfile> -accountname <n>} } [-commit]\n");
         System.out.println("    -A classifyindb -taxconfig <f> -year <yyyy>\n");
         System.out.println("    -A exp2excel [-accountname <n>] [-file <f.xlsx>] [-filter \"tr types\"]\n");
         System.out.println("    -A impexcel [-commit] [-accountname <n>] [-file <f.xlsx>]\n");
@@ -1017,6 +1052,8 @@ public class AccountsMainApp
     public static final String EXP2EXCEL        = "exp2excel";
     public static final String IMPEXCEL         = "impexcel";
     public static final String CLASSIFY_EXP     = "classify_exp";
+
+    public static final String DELETETRS = "deletetrs";
 
     public static final String              CREATEACS    = "createacs";
     public static final String              LISTACS      = "listacs";
@@ -1038,6 +1075,7 @@ public class AccountsMainApp
         ALL_OPTS.put("taxconfig", Getopt.CONTRNT_S);
         ALL_OPTS.put("year", Getopt.CONTRNT_I);
         ALL_OPTS.put("file", Getopt.CONTRNT_S);
+        ALL_OPTS.put("dir", Getopt.CONTRNT_S);
         ALL_OPTS.put("commit", Getopt.CONTRNT_NOARG);
         ALL_OPTS.put("filter", Getopt.CONTRNT_S);
 
@@ -1199,10 +1237,27 @@ public class AccountsMainApp
 
             } else if (IMPORT2DB.equalsIgnoreCase(action))
             {
-                final BankStatement bs = new BankStatement(argHash.get("bankstatement"), argHash.get("accountname"),
-                        argHash.get("bankstformat"));
+                if (argHash.get("bankstatement") != null && argHash.get("dir") != null)
+                {
+                    usage("options -bankstatement and -dir are mutually exclusive\n"
+                            + "\nWhen -dir -s used the name of the statement files should match the bank name.");
+                }
+                if (argHash.get("dir") != null)
+                {
+                    List<BankAccount> foundList = importMultiple2DB(argHash.get("dir"), argHash.get("commit") != null);
+                    System.out.println("FoundStatements for banks=" + foundList);
+                    DBIfc dbi = DBFactory.createDBIfc();
+                    System.out.println("Number of bank accounts in DB=" + dbi.getAccounts().size());
+                    System.out.println("Number of bank statements imported=" + foundList.size());
 
-                checkAndCommit(bs, argHash.get("commit") != null);
+                } else
+                {
+                    final BankStatement bs = new BankStatement(argHash.get("bankstatement"), argHash.get("accountname"),
+                            argHash.get("bankstformat"));
+
+                    checkAndCommit(bs, argHash.get("commit") != null);
+                }
+
             } else if (PARSEANDCLASSIFY.equalsIgnoreCase(action))
             {
                 final BankStatement bs = new BankStatement(argHash.get("bankstatement"), argHash.get("accountname"),
@@ -1255,6 +1310,14 @@ public class AccountsMainApp
                 final TaxConfig tc = new TaxConfig(argHash.get("taxconfig"));
                 DBIfc dbIfc = classifyindb(tc);
                 exportToExcel(argHash.get("accountname"), argHash.get("file"), argHash.get("filter"));
+
+            } else if (DELETETRS.equalsIgnoreCase(action))
+            {
+                if (argHash.get("accountname") == null)
+                {
+                    usage("-accountname argument is required.");
+                }
+                deleteTrs(argHash.get("accountname"));
 
             } else
             {

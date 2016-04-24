@@ -39,4 +39,6 @@ public interface DBIfc
 
     public void deleteGroup(String name) throws DBException;
 
+    public void deleteTransactions(int tableId) throws DBException;
+
 }

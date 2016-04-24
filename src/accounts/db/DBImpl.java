@@ -18,6 +18,7 @@ import java.util.TreeMap;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
+import javax.persistence.Query;
 
 import accounts.Getopt;
 
@@ -36,22 +37,18 @@ public class DBImpl implements DBIfc
         {
             throw new IOException("Directory not present=" + dir);
         }
-
-        String classifyRulesDir = dir + File.separator + "classify_rules" + File.separator;
-        File classifyRulesDirFile = new File(classifyRulesDir);
-        classifyRulesDirFile.mkdir();
-        if (!classifyRulesDirFile.exists())
+        String dirs[] = { "classify_rules", "bank_stmts", "config", "samples" };
+        for (String dirtocreate : dirs)
         {
-            throw new IOException("Unable to create directory=" + classifyRulesDirFile);
+            String pathDir = dir + File.separator + dirtocreate + File.separator;
+            File pathFile = new File(pathDir);
+            pathFile.mkdir();
+            if (!pathFile.exists())
+            {
+                throw new IOException("Unable to create directory=" + pathFile);
+            }
         }
 
-        String bStmtDir = dir + File.separator + "bank_stmts" + File.separator;
-        File bStmtDirFile = new File(bStmtDir);
-        bStmtDirFile.mkdir();
-        if (!bStmtDirFile.exists())
-        {
-            throw new IOException("Unable to create directory=" + bStmtDir);
-        }
         for (int i = 2014; i < 2030; i++)
         {
             String yearDir = dir + File.separator + "bank_stmts" + File.separator + i + File.separator;
@@ -59,46 +56,39 @@ public class DBImpl implements DBIfc
             yearDirFile.mkdir();
         }
 
-        String configDir = dir + File.separator + "config" + File.separator;
-        File configDirFile = new File(configDir);
-        configDirFile.mkdir();
-        if (!configDirFile.exists())
-        {
-            throw new IOException("Unable to create directory=" + configDir);
-        }
         if (getClass().getResource("/accounts/resources/bbt_statement_format.txt") == null)
         {
             throw new IOException(
                     "Internal error. Unable to find resource in package=" + "/accounts/resources/bbt_statement_format.txt");
 
         }
-        File fmtFile = new File(configDir + File.separator + "bbt_statement_format.txt");
+        String configDir = dir + File.separator + "config";
+
+        String cfgFiles[] = { "bbt_statement_format.txt", "dcu_statement_format.txt", "dcu_visa_statement_format.txt",
+                "wellsfargo_statement_format.txt", "amex_statement_format.txt", "transaction_types.txt", "tax_category.txt" };
+        for (String cfgFile : cfgFiles)
+        {
+            File fmtFile = new File(configDir + File.separator + cfgFile);
+            if (!fmtFile.exists())
+                Files.copy(new File(getClass().getResource("/accounts/resources/" + cfgFile).getFile()).toPath(),
+                        fmtFile.toPath());
+        }
+
+        String samplesDir = dir + File.separator + "samples";
+
+        String samplesFiles[] = { "bankaccounts.csv", "properties.csv", "groups.csv" };
+        for (String sampleFile : samplesFiles)
+        {
+            File fmtFile = new File(samplesDir + File.separator + sampleFile);
+            if (!fmtFile.exists())
+                Files.copy(new File(getClass().getResource("/accounts/resources/" + sampleFile).getFile()).toPath(),
+                        fmtFile.toPath());
+        }
+
+        String classifyRulesDir = dir + File.separator + "classify_rules";
+        File fmtFile = new File(classifyRulesDir + File.separator + "CommonRulesInclude_Rental.txt");
         if (!fmtFile.exists())
-            Files.copy(new File(getClass().getResource("/accounts/resources/bbt_statement_format.txt").getFile()).toPath(),
-                    fmtFile.toPath());
-        fmtFile = new File(configDir + File.separator + "dcu_statement_format.txt");
-        if (!fmtFile.exists())
-            Files.copy(new File(getClass().getResource("/accounts/resources/dcu_statement_format.txt").getFile()).toPath(),
-                    fmtFile.toPath());
-        fmtFile = new File(configDir + File.separator + "dcu_visa_statement_format.txt");
-        if (!fmtFile.exists())
-            Files.copy(new File(getClass().getResource("/accounts/resources/dcu_visa_statement_format.txt").getFile()).toPath(),
-                    fmtFile.toPath());
-        fmtFile = new File(configDir + File.separator + "wellsfargo_statement_format.txt");
-        if (!fmtFile.exists())
-            Files.copy(new File(getClass().getResource("/accounts/resources/wellsfargo_statement_format.txt").getFile()).toPath(),
-                    fmtFile.toPath());
-        fmtFile = new File(configDir + File.separator + "amex_statement_format.txt");
-        if (!fmtFile.exists())
-            Files.copy(new File(getClass().getResource("/accounts/resources/amex_statement_format.txt").getFile()).toPath(),
-                    fmtFile.toPath());
-        fmtFile = new File(configDir + File.separator + "transaction_types.txt");
-        if (!fmtFile.exists())
-            Files.copy(new File(getClass().getResource("/accounts/resources/transaction_types.txt").getFile()).toPath(),
-                    fmtFile.toPath());
-        fmtFile = new File(configDir + File.separator + "tax_category.txt");
-        if (!fmtFile.exists())
-            Files.copy(new File(getClass().getResource("/accounts/resources/tax_category.txt").getFile()).toPath(),
+            Files.copy(new File(getClass().getResource("/accounts/resources/CommonRulesInclude_Rental.txt").getFile()).toPath(),
                     fmtFile.toPath());
 
     }
@@ -386,6 +376,26 @@ public class DBImpl implements DBIfc
 
     }
 
+    @Override
+    public void deleteTransactions(int tableId) throws DBException
+    {
+        EntityManager em = factory.createEntityManager();
+        try
+        {
+            em.getTransaction().begin();
+
+            Query q = em.createNativeQuery("DELETE FROM TR" + tableId);
+
+            q.executeUpdate();
+
+            em.getTransaction().commit();
+        } finally
+        {
+            em.close();
+        }
+
+    }
+
     private String getTRClass(int tableId)
     {
         return "accounts.db.inst.TR" + tableId;
@@ -405,11 +415,15 @@ public class DBImpl implements DBIfc
         EntityManager em = factory.createEntityManager();
         List<TR> trList = em.createNamedQuery("TR" + tableId + ".getList", TR.class).getResultList();
         em.close();
-        Map<TRId, TR> trMap = new TreeMap<TRId, TR>();
 
         for (TR tr : trList)
         {
             tr.setTrId(); // TrId is not filled by JPA. So set it.
+        }
+
+        Map<TRId, TR> trMap = new TreeMap<TRId, TR>();
+        for (TR tr : trList)
+        {
             TRId trId = tr.getTrId();
             trMap.put(trId, tr);
         }

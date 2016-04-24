@@ -1,0 +1,4 @@
+# Group is just a logical entity which represents two or more properties
+# It is useful when same account is used for multiple properties
+#g_meadows,14433street1, 14495street2, 14483street3, 14473street4
+#g_2,123abc,234xyz
