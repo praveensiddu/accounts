@@ -77,6 +77,8 @@ public class TaxConfig
                 if (BACCOUNT.equals(key))
                 {
                     currentAccount = value;
+                    currentProperty = "";
+                    currOtherEntity = "";
                     // Empty rule. Only bank account name is copied
                     rr = rr.createFresh();
                     rr.setCurrentAccount(currentAccount);
@@ -103,6 +105,8 @@ public class TaxConfig
                 } else if (CLOSERULE.equals(key))
                 {
                     // Empty rule. Only bank account name is copied
+                    currentProperty = "";
+                    currOtherEntity = "";
                     rr = rr.createFresh();
                 } else if (INCLUDE_FILE.equals(key))
                 {
