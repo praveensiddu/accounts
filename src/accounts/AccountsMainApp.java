@@ -118,6 +118,7 @@ public class AccountsMainApp
     {
         final Map<String, ArrayList<TR>> propTrMap = new HashMap<String, ArrayList<TR>>();
         final Map<String, ArrayList<TR>> grpTrMap = new HashMap<String, ArrayList<TR>>();
+        final Map<String, ArrayList<TR>> companyTrMap = new HashMap<String, ArrayList<TR>>();
         Map<String, BankAccount> acctMap = dbIfc.getAccounts();
         Map<String, IGroup> groupsMap = dbIfc.getGropusMap();
 
@@ -126,14 +127,18 @@ public class AccountsMainApp
         {
             Map<TRId, TR> trMap = dbIfc.getTransactions(ba.getTrTableId());
             // Group the transactions for each property and group
-            addToPropertyMap(year, trMap, groupsMap, propTrMap, grpTrMap);
+            addToPropertyMap(year, trMap, groupsMap, propTrMap, grpTrMap, companyTrMap);
         }
         Map<String, RealProperty> propertyMap = dbIfc.getProperties();
-        return reportFromPropMap(propTrMap, grpTrMap, propertyMap, groupsMap);
+        StringBuffer sb = reportFromPropMap(propTrMap, grpTrMap, propertyMap, groupsMap);
+        sb.append(reportFromCompanyMap(companyTrMap));
+
+        return sb;
     }
 
     private static void addToPropertyMap(final int year, final Map<TRId, TR> trMap, final Map<String, IGroup> groupsMap,
-                                         Map<String, ArrayList<TR>> propTrMap, Map<String, ArrayList<TR>> grpTrMap)
+                                         Map<String, ArrayList<TR>> propTrMap, Map<String, ArrayList<TR>> grpTrMap,
+                                         Map<String, ArrayList<TR>> companyTrMap)
     {
         for (final TR tr : trMap.values())
         {
@@ -144,54 +149,99 @@ public class AccountsMainApp
             {
                 continue;
             }
-            if (propTrMap.containsKey(tr.getProperty()))
+            if (tr.getProperty() != null && !tr.getProperty().isEmpty())
             {
-                final ArrayList<TR> arrTr = propTrMap.get(tr.getProperty());
-                arrTr.add(tr);
-            } else if (grpTrMap.containsKey(tr.getProperty()))
-            {
-                final ArrayList<TR> arrTr = grpTrMap.get(tr.getProperty());
-                arrTr.add(tr);
-            } else
-            {
-                if (groupsMap.containsKey(tr.getProperty()))
+                // This transaction belongs to a rental property
+                if (propTrMap.containsKey(tr.getProperty()))
                 {
-                    if (!grpTrMap.containsKey(tr.getProperty()))
-                    {
-                        final ArrayList<TR> arrTr = new ArrayList<TR>();
-                        arrTr.add(tr);
-                        grpTrMap.put(tr.getProperty(), arrTr);
-                        continue;
-                    } else
-                    {
-
-                        final ArrayList<TR> arrTr = grpTrMap.get(tr.getProperty());
-                        arrTr.add(tr);
-                    }
+                    final ArrayList<TR> arrTr = propTrMap.get(tr.getProperty());
+                    arrTr.add(tr);
+                } else if (grpTrMap.containsKey(tr.getProperty()))
+                {
+                    final ArrayList<TR> arrTr = grpTrMap.get(tr.getProperty());
+                    arrTr.add(tr);
                 } else
                 {
-                    if (!propTrMap.containsKey(tr.getProperty()))
+                    if (groupsMap.containsKey(tr.getProperty()))
+                    {
+                        if (grpTrMap.containsKey(tr.getProperty()))
+                        {
+                            final ArrayList<TR> arrTr = grpTrMap.get(tr.getProperty());
+                            arrTr.add(tr);
+                        } else
+                        {
+                            final ArrayList<TR> arrTr = new ArrayList<TR>();
+                            arrTr.add(tr);
+                            grpTrMap.put(tr.getProperty(), arrTr);
+                            continue;
+                        }
+                    } else
                     {
                         final ArrayList<TR> arrTr = new ArrayList<TR>();
                         arrTr.add(tr);
-                        if (tr.getProperty() == null)
-                        {// TODO should we allow this?
-                            propTrMap.put("null", arrTr);
-                        } else
-                        {
-                            propTrMap.put(tr.getProperty(), arrTr);
-
-                        }
+                        propTrMap.put(tr.getProperty(), arrTr);
                         continue;
-                    } else
-                    {
-
-                        final ArrayList<TR> arrTr = propTrMap.get(tr.getProperty());
-                        arrTr.add(tr);
                     }
+                }
+            } else if ("company".equalsIgnoreCase(tr.getTaxCategory()))
+            {
+                //
+                if (companyTrMap.containsKey(tr.getOtherEntity()))
+                {
+                    final ArrayList<TR> arrTr = companyTrMap.get(tr.getOtherEntity());
+                    arrTr.add(tr);
+                } else
+                {
+                    final ArrayList<TR> arrTr = new ArrayList<TR>();
+                    arrTr.add(tr);
+                    companyTrMap.put(tr.getOtherEntity(), arrTr);
+                    continue;
+                }
+            } else if ("realestate".equalsIgnoreCase(tr.getTaxCategory()))
+            {
+                //
+                if (companyTrMap.containsKey("realestate"))
+                {
+                    final ArrayList<TR> arrTr = companyTrMap.get("realestate");
+                    arrTr.add(tr);
+                } else
+                {
+                    final ArrayList<TR> arrTr = new ArrayList<TR>();
+                    arrTr.add(tr);
+                    companyTrMap.put("realestate", arrTr);
+                    continue;
                 }
             }
         }
+    }
+
+    private static StringBuffer reportFromCompanyMap(final Map<String, ArrayList<TR>> companyTrMap)
+    {
+
+        Map<String, Map<String, Float>> trTypeTotalMap = new HashMap<String, Map<String, Float>>();
+
+        for (final String name : companyTrMap.keySet())
+        {
+            final Map<String, Float> trTypeMap = trTypeTotal(companyTrMap.get(name));
+            trTypeTotalMap.put(name, trTypeMap);
+        }
+        List<String> listCompanies = new ArrayList<String>(companyTrMap.keySet());
+        Collections.sort(listCompanies);
+        // For each company first calculate the totals in each category and
+        // then prepare the report
+        StringBuffer sb = new StringBuffer();
+        for (final String name : listCompanies)
+        {
+            sb.append("\nReport for company=" + name + "\n");
+            final Map<String, Float> trTypeMap = trTypeTotalMap.get(name);
+            final Map<String, Float> trTypeMapSorted = new TreeMap<String, Float>(trTypeMap);
+            for (String trType : trTypeMapSorted.keySet())
+            {
+                sb.append("    " + trType + "=" + trTypeMapSorted.get(trType) + "\n");
+            }
+            sb.append("");
+        }
+        return sb;
     }
 
     private static StringBuffer reportFromPropMap(final Map<String, ArrayList<TR>> propTrMap,
@@ -209,6 +259,9 @@ public class AccountsMainApp
         // Start assigning from group to individual
         for (final String grpName : groupsMap.keySet())
         {
+            IGroup group = groupsMap.get(grpName);
+            if (group.getMembers() == null)
+                continue; // group not created properly
             if (!groupTrMap.containsKey(grpName))
             {
                 // THere is no transaction in any of the bank accounts assigned
@@ -216,9 +269,6 @@ public class AccountsMainApp
                 continue;
             }
             final Map<String, Float> grpTrTypeMap = trTypeTotal(groupTrMap.get(grpName));
-            IGroup group = groupsMap.get(grpName);
-            if (group.getMembers() == null)
-                continue; // group not created properly
             int size = group.getMembers().size();
             for (String propName : group.getMembers())
             {
@@ -285,29 +335,31 @@ public class AccountsMainApp
                 totalExpense += (-(depreciation / ownerCount));
 
             }
-            float other = 0;
+            float bankfees = 0;
+            float hoa = 0;
+            float closingDepreciation = 0;
 
             if (trTypeMap.containsKey(BANKFEES))
             {
                 // include everything else in the other category
-                other = (trTypeMap.get(BANKFEES) / ownerCount);
-                totalExpense += (trTypeMap.get(BANKFEES) / ownerCount);
+                bankfees = (trTypeMap.get(BANKFEES) / ownerCount);
+                totalExpense += bankfees;
             }
             if (trTypeMap.containsKey(HOA))
             {
-                other += (trTypeMap.get(HOA) / ownerCount);
-                totalExpense += (trTypeMap.get(HOA) / ownerCount);
+                hoa += (trTypeMap.get(HOA) / ownerCount);
+                totalExpense += hoa;
             }
             if (rp != null)
             {
                 if (rp.getLoanClosingCost() > 0)
                 {
-                    float closingDepreciation = (float) (-(rp.getLoanClosingCost() * 6.67 / 100 / ownerCount));
+                    closingDepreciation = (float) (-(rp.getLoanClosingCost() * 6.67 / 100 / ownerCount));
                     totalExpense += (closingDepreciation);
-                    other += (closingDepreciation);
                 }
             }
-            sb.append("    19 other(hoa +bank fees+loan closing)=" + other + "\n");
+            sb.append("    19 other(hoa +bank fees+loan closing)=" + bankfees + "+" + hoa + "+" + closingDepreciation + "+"
+                    + (bankfees + hoa + closingDepreciation) + "\n");
 
             sb.append("    20 total expense" + "=" + (totalExpense) + "\n");
             StringBuffer sbUnown = new StringBuffer();
@@ -334,9 +386,12 @@ public class AccountsMainApp
     {
         final Map<String, ArrayList<TR>> propTrMap = new HashMap<String, ArrayList<TR>>();
         final Map<String, ArrayList<TR>> grpTrMap = new HashMap<String, ArrayList<TR>>();
+        final Map<String, ArrayList<TR>> companyTrMap = new HashMap<String, ArrayList<TR>>();
         Map<String, IGroup> dummyGrpMap = new HashMap<String, IGroup>();
-        addToPropertyMap(year, trMap, dummyGrpMap, propTrMap, grpTrMap);
-        return reportFromPropMap(propTrMap, grpTrMap, null, null);
+        addToPropertyMap(year, trMap, dummyGrpMap, propTrMap, grpTrMap, companyTrMap);
+        StringBuffer sb = reportFromPropMap(propTrMap, grpTrMap, null, null);
+        sb.append(reportFromCompanyMap(companyTrMap));
+        return sb;
 
     }
 
@@ -858,15 +913,26 @@ public class AccountsMainApp
 
         for (BankAccount ba : dbIfc.getAccounts().values())
         {
-            // TBD Looks for only lowercase files.
+            boolean found = false;
             File stmtFile = new File(dir + File.separator + ba.getName() + ".csv");
             if (stmtFile.isFile())
             {
-                foundStmts.add(ba);
+                found = true;
                 final BankStatement bs = new BankStatement(stmtFile.getAbsolutePath(), ba.getName(), null);
 
                 checkAndCommit(bs, commit);
             }
+
+            File stmtAddendumFile = new File(dir + File.separator + ba.getName() + "_addendum.csv");
+            if (stmtAddendumFile.isFile())
+            {
+                found = true;
+                final BankStatement bs = new BankStatement(stmtAddendumFile.getAbsolutePath(), ba.getName(), null);
+
+                checkAndCommit(bs, commit);
+            }
+            if (found)
+                foundStmts.add(ba);
         }
         return foundStmts;
     }
@@ -1035,8 +1101,9 @@ public class AccountsMainApp
         System.out.println("    (Unit test only)-A parse -bankstatement <csvfile> -accountname <n> [-bankstformat <f>]\n");
         System.out.println(
                 "    (unit test only)-A parseandclassify -bankstatement <csvfile> -accountname <n> -taxconfig <f> [-bankstformat <f> ]\n");
-        System.out.println(
-                "    -A import2db {-dir <dirwithstatements> | {-bankstatement <csvfile> -accountname <n>} } [-commit]\n");
+        System.out.println("    -A import2db {-dir <dir> | {-bankstatement <csv> -accountname <n>} } [-commit]");
+        System.out.println("        dir contains csv files with name accountname.csv or accountname_addendum.csv");
+        System.out.println("        Recommended to keep all statements under $ACCOUNTSDB/bank_stmts directory\n");
         System.out.println("    -A classifyindb -taxconfig <f> -year <yyyy>\n");
         System.out.println("    -A exp2excel [-accountname <n>] [-file <f.xlsx>] [-filter \"tr types\"]\n");
         System.out.println("    -A impexcel [-commit] [-accountname <n>] [-file <f.xlsx>]\n");

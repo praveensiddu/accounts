@@ -1,11 +1,13 @@
-delete all transaction in an account
-tabs in sorted order
-manual update flag remove option to user
+
+do not hardcode rent percentage deduction in company
+Add summary report to excel
+
+
+
+amex bank statement format should change instead of year end report
+
+
 remove unwanted usage
-amex bank statement format should change
-Make include tax config relative
-company accounts consolidate
-delete all transactions in a bank
 
 exp2excel to have ignore category option
 thorough test of mkuniq feature with exporttr, importtr and import2db
