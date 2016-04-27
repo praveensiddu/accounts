@@ -406,7 +406,7 @@ public class AccountsMainApp
                     totalExpense += (closingDepreciation);
                 }
             }
-            sb.append("    19 other(hoa +bank fees+loan closing)=" + bankfees + "+" + hoa + "+" + closingDepreciation + "+"
+            sb.append("    19 other(hoa +bank fees+loan closing)" + bankfees + "+" + hoa + "+" + closingDepreciation + " ="
                     + (bankfees + hoa + closingDepreciation) + "\n");
 
             sb.append("    20 total expense" + "=" + (totalExpense) + "\n");
@@ -1436,6 +1436,7 @@ public class AccountsMainApp
                     usage("-accountname argument is required.");
                 }
                 deleteTrs(argHash.get("accountname"));
+                System.out.println("Delete transactions completed");
 
             } else
             {
