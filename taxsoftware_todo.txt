@@ -1,6 +1,8 @@
+Summary for other entity
 
 do not hardcode rent percentage deduction in company
 Add summary report to excel
+
 
 
 

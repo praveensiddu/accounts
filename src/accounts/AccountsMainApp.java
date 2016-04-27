@@ -119,6 +119,7 @@ public class AccountsMainApp
         final Map<String, ArrayList<TR>> propTrMap = new HashMap<String, ArrayList<TR>>();
         final Map<String, ArrayList<TR>> grpTrMap = new HashMap<String, ArrayList<TR>>();
         final Map<String, ArrayList<TR>> companyTrMap = new HashMap<String, ArrayList<TR>>();
+        final Map<String, ArrayList<TR>> otherTrMap = new HashMap<String, ArrayList<TR>>();
         Map<String, BankAccount> acctMap = dbIfc.getAccounts();
         Map<String, IGroup> groupsMap = dbIfc.getGropusMap();
 
@@ -127,18 +128,19 @@ public class AccountsMainApp
         {
             Map<TRId, TR> trMap = dbIfc.getTransactions(ba.getTrTableId());
             // Group the transactions for each property and group
-            addToPropertyMap(year, trMap, groupsMap, propTrMap, grpTrMap, companyTrMap);
+            addToPropertyMap(year, trMap, groupsMap, propTrMap, grpTrMap, companyTrMap, otherTrMap);
         }
         Map<String, RealProperty> propertyMap = dbIfc.getProperties();
         StringBuffer sb = reportFromPropMap(propTrMap, grpTrMap, propertyMap, groupsMap);
         sb.append(reportFromCompanyMap(companyTrMap));
+        sb.append(reportFromOtherMap(otherTrMap));
 
         return sb;
     }
 
     private static void addToPropertyMap(final int year, final Map<TRId, TR> trMap, final Map<String, IGroup> groupsMap,
                                          Map<String, ArrayList<TR>> propTrMap, Map<String, ArrayList<TR>> grpTrMap,
-                                         Map<String, ArrayList<TR>> companyTrMap)
+                                         Map<String, ArrayList<TR>> companyTrMap, final Map<String, ArrayList<TR>> otherTrMap)
     {
         for (final TR tr : trMap.values())
         {
@@ -211,8 +213,54 @@ public class AccountsMainApp
                     companyTrMap.put("realestate", arrTr);
                     continue;
                 }
+            } else
+            {
+                if (tr.getOtherEntity() != null && !tr.getOtherEntity().isEmpty())
+                {
+                    if (otherTrMap.containsKey(tr.getOtherEntity()))
+                    {
+                        final ArrayList<TR> arrTr = otherTrMap.get(tr.getOtherEntity());
+                        arrTr.add(tr);
+                    } else
+                    {
+                        final ArrayList<TR> arrTr = new ArrayList<TR>();
+                        arrTr.add(tr);
+                        otherTrMap.put(tr.getOtherEntity(), arrTr);
+                        continue;
+                    }
+
+                }
             }
         }
+    }
+
+    private static StringBuffer reportFromOtherMap(final Map<String, ArrayList<TR>> otherTrMap)
+    {
+
+        Map<String, Map<String, Float>> trTypeTotalMap = new HashMap<String, Map<String, Float>>();
+
+        for (final String name : otherTrMap.keySet())
+        {
+            final Map<String, Float> trTypeMap = trTypeTotal(otherTrMap.get(name));
+            trTypeTotalMap.put(name, trTypeMap);
+        }
+        List<String> listCompanies = new ArrayList<String>(otherTrMap.keySet());
+        Collections.sort(listCompanies);
+        // For each company first calculate the totals in each category and
+        // then prepare the report
+        StringBuffer sb = new StringBuffer();
+        for (final String name : listCompanies)
+        {
+            sb.append("\nReport for other entity=" + name + "\n");
+            final Map<String, Float> trTypeMap = trTypeTotalMap.get(name);
+            final Map<String, Float> trTypeMapSorted = new TreeMap<String, Float>(trTypeMap);
+            for (String trType : trTypeMapSorted.keySet())
+            {
+                sb.append("    " + trType + "=" + trTypeMapSorted.get(trType) + "\n");
+            }
+            sb.append("");
+        }
+        return sb;
     }
 
     private static StringBuffer reportFromCompanyMap(final Map<String, ArrayList<TR>> companyTrMap)
@@ -387,10 +435,13 @@ public class AccountsMainApp
         final Map<String, ArrayList<TR>> propTrMap = new HashMap<String, ArrayList<TR>>();
         final Map<String, ArrayList<TR>> grpTrMap = new HashMap<String, ArrayList<TR>>();
         final Map<String, ArrayList<TR>> companyTrMap = new HashMap<String, ArrayList<TR>>();
+        final Map<String, ArrayList<TR>> otherTrMap = new HashMap<String, ArrayList<TR>>();
         Map<String, IGroup> dummyGrpMap = new HashMap<String, IGroup>();
-        addToPropertyMap(year, trMap, dummyGrpMap, propTrMap, grpTrMap, companyTrMap);
+        addToPropertyMap(year, trMap, dummyGrpMap, propTrMap, grpTrMap, companyTrMap, otherTrMap);
         StringBuffer sb = reportFromPropMap(propTrMap, grpTrMap, null, null);
         sb.append(reportFromCompanyMap(companyTrMap));
+        sb.append(reportFromOtherMap(otherTrMap));
+
         return sb;
 
     }
