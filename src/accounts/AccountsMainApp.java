@@ -115,7 +115,7 @@ public class AccountsMainApp
 
     }
 
-    private static StringBuffer report(final int year, final DBIfc dbIfc, boolean createExcel) throws DBException
+    private static StringBuffer report(final int year, final DBIfc dbIfc, Map<String, Float[]> propTable) throws DBException
     {
         final Map<String, ArrayList<TR>> propTrMap = new HashMap<String, ArrayList<TR>>();
         final Map<String, ArrayList<TR>> grpTrMap = new HashMap<String, ArrayList<TR>>();
@@ -131,13 +131,10 @@ public class AccountsMainApp
             // Group the transactions for each property and group
             addToPropertyMap(year, trMap, groupsMap, propTrMap, grpTrMap, companyTrMap, otherTrMap);
         }
-        StringBuffer sb = reportFromPropMap(propTrMap, grpTrMap, dbIfc, groupsMap);
+
+        StringBuffer sb = reportFromPropMap(propTrMap, grpTrMap, dbIfc, groupsMap, propTable);
         sb.append(reportFromCompanyMap(companyTrMap));
         sb.append(reportFromOtherMap(otherTrMap));
-        if (createExcel)
-        {
-            // summaryToExcel(propTrMap, companyTrMap, otherTrMap);
-        }
 
         return sb;
     }
@@ -298,7 +295,8 @@ public class AccountsMainApp
 
     private static StringBuffer reportFromPropMap(final Map<String, ArrayList<TR>> propTrMap,
                                                   final Map<String, ArrayList<TR>> groupTrMap, final DBIfc dbIfc,
-                                                  final Map<String, IGroup> groupsMap) throws DBException
+                                                  final Map<String, IGroup> groupsMap,
+                                                  Map<String, Float[]> propTable) throws DBException
     {
 
         final Map<String, RealProperty> propertyMap = dbIfc.getProperties();
@@ -349,6 +347,8 @@ public class AccountsMainApp
         StringBuffer sb = new StringBuffer();
         for (final String propName : listProps)
         {
+            Float[] taxValues = new Float[22];
+            propTable.put(propName, taxValues);
             sb.append("\nSchedule E for Property=" + propName + "\n");
             final Map<String, Float> trTypeMap = propTrTypeTotalMap.get(propName);
             int ownerCount = 1;
@@ -372,32 +372,35 @@ public class AccountsMainApp
             }
             float totalExpense = 0;
             // Ok to hardcode 18 since tax row numbers do not change
-            for (int i = 1; i <= 18; i++)
+            for (int i = 1; i < 18; i++)
             {
                 if (scheduleEAry[i] == null)
                     continue;
+                float value = 0;
                 if (trTypeMap.containsKey(scheduleEAry[i]))
                 {
                     if (RENT.equalsIgnoreCase(scheduleEAry[i]))
                     {
-                        sb.append("    " + i + " " + scheduleEAry[i] + "="
-                                + (trTypeMap.get(scheduleEAry[i]) * rentPercentage / 100 / ownerCount) + "\n");
+                        value = (trTypeMap.get(scheduleEAry[i]) * rentPercentage / 100 / ownerCount);
 
                     } else
                     {
-                        totalExpense += (trTypeMap.get(scheduleEAry[i]) / ownerCount);
-                        sb.append(
-                                "    " + i + " " + scheduleEAry[i] + "=" + (trTypeMap.get(scheduleEAry[i]) / ownerCount) + "\n");
+                        value = (trTypeMap.get(scheduleEAry[i]) / ownerCount);
+                        totalExpense += value;
                     }
+                    sb.append("    " + i + " " + scheduleEAry[i] + "=" + value + "\n");
                 }
+                taxValues[i] = value;
             }
 
             if (rp != null)
             {
                 int costPlusReno = rp.getCost() + rp.getRenovation();
                 double depreciation = (costPlusReno * 3.64 / 100);
-                sb.append("    18 depreciation" + "=" + (-(depreciation / ownerCount)) + "\n");
-                totalExpense += (-(depreciation / ownerCount));
+                double value = (-(depreciation / ownerCount));
+                sb.append("    18 depreciation" + "=" + value + "\n");
+                totalExpense += value;
+                taxValues[18] = (float) value;
 
             }
             float bankfees = 0;
@@ -408,23 +411,23 @@ public class AccountsMainApp
             {
                 // include everything else in the other category
                 bankfees = (trTypeMap.get(BANKFEES) / ownerCount);
-                totalExpense += bankfees;
             }
             if (trTypeMap.containsKey(HOA))
             {
                 hoa += (trTypeMap.get(HOA) / ownerCount);
-                totalExpense += hoa;
             }
             if (rp != null)
             {
                 if (rp.getLoanClosingCost() > 0)
                 {
                     closingDepreciation = (float) (-(rp.getLoanClosingCost() * 6.67 / 100 / ownerCount));
-                    totalExpense += (closingDepreciation);
                 }
             }
+            float valueItem19 = (bankfees + hoa + closingDepreciation);
+            totalExpense += (valueItem19);
+            taxValues[19] = (float) valueItem19;
             sb.append("    19 other(hoa +bank fees+loan closing)" + bankfees + "+" + hoa + "+" + closingDepreciation + " ="
-                    + (bankfees + hoa + closingDepreciation) + "\n");
+                    + valueItem19 + "\n");
 
             sb.append("    20 total expense" + "=" + (totalExpense) + "\n");
             StringBuffer sbUnown = new StringBuffer();
@@ -455,7 +458,9 @@ public class AccountsMainApp
         final Map<String, ArrayList<TR>> otherTrMap = new HashMap<String, ArrayList<TR>>();
         Map<String, IGroup> dummyGrpMap = new HashMap<String, IGroup>();
         addToPropertyMap(year, trMap, dummyGrpMap, propTrMap, grpTrMap, companyTrMap, otherTrMap);
-        StringBuffer sb = reportFromPropMap(propTrMap, grpTrMap, null, null);
+
+        Map<String, Float[]> propTable = new TreeMap<String, Float[]>();
+        StringBuffer sb = reportFromPropMap(propTrMap, grpTrMap, null, null, propTable);
         sb.append(reportFromCompanyMap(companyTrMap));
         sb.append(reportFromOtherMap(otherTrMap));
 
@@ -724,182 +729,64 @@ public class AccountsMainApp
         dbi.deleteTransactions(ba.getTrTableId());
     }
 
-    /*
-    
-    
-    private static void summaryToExcel(Map<String, ArrayList<TR>> propTrMap, Map<String, ArrayList<TR>> companyTrMap, Map<String, ArrayList<TR>> otherTrMap) throws DBException, IOException
+    private static void createSummarySheet(XSSFWorkbook workBook, Map<String, Float[]> propTable)
     {
-        DBIfc dbIfc = DBFactory.createDBIfc();
-    
-        dbIfc.createAndConnectDB(null);
-    
-        AccountsUtil.createInstance(); // Initialization
-    
-        XSSFWorkbook workBook = new XSSFWorkbook();
-    
-        CellStyle wrapAlignCellStyle = workBook.createCellStyle();
-        wrapAlignCellStyle.setWrapText(true);
-        wrapAlignCellStyle.setVerticalAlignment(CellStyle.VERTICAL_TOP);
-        CellStyle topAlignCellStyle = workBook.createCellStyle();
-        topAlignCellStyle.setVerticalAlignment(CellStyle.VERTICAL_TOP);
-    
-        Map<String, BankAccount> baMap = new TreeMap<String, BankAccount>(dbIfc.getAccounts());
-    
-        for (BankAccount ba : baMap.values())
+        XSSFSheet sheet = workBook.createSheet("RentalSummary");
         {
-            if (accountName != null && !ba.getName().equalsIgnoreCase(accountName))
-            {
-                continue;
-            }
-            String baName = ba.getName();
-    
-            XSSFSheet sheet = workBook.createSheet(baName);
-            {
-                XSSFRow currentRow = sheet.createRow(0);
-                int col = 0;
-                Cell cell = null;
-                cell = currentRow.createCell(col++);
-                cell.setCellValue("Date");
-                cell = currentRow.createCell(col++);
-                cell.setCellValue("Description");
-                cell = currentRow.createCell(col++);
-                cell.setCellValue("Debit");
-                cell = currentRow.createCell(col++);
-                cell.setCellValue("Comment");
-                cell = currentRow.createCell(col++);
-                cell.setCellValue("Transaction Type");
-                cell.setCellStyle(unlockedCellStyle);
-                cell = currentRow.createCell(col++);
-                cell.setCellValue("Tax Category");
-                cell.setCellStyle(unlockedCellStyle);
-                cell = currentRow.createCell(col++);
-                cell.setCellValue("Property");
-                cell.setCellStyle(unlockedCellStyle);
-                cell = currentRow.createCell(col++);
-                cell.setCellValue("OtherEntity");
-                cell.setCellStyle(unlockedCellStyle);
-                cell = currentRow.createCell(col++);
-                cell.setCellValue("ManuallyUpdated");
-                cell.setCellStyle(unlockedCellStyle);
-            }
-    
-            CellStyle dateCellStyle = workBook.createCellStyle();
-            dateCellStyle.setDataFormat(workBook.getCreationHelper().createDataFormat().getFormat("MM/dd/yyyy"));
-            dateCellStyle.setVerticalAlignment(CellStyle.VERTICAL_TOP);
-    
-            Map<TRId, TR> trMap = dbIfc.getTransactions(ba.getTrTableId());
-    
-            int RowNum = 0;
-            for (TR tr : trMap.values())
-            {
-                if (filter != null)
-                {
-                    if (filter.equals(tr.getTrType()))
-                    {
-                        continue;
-                    }
-                }
-                RowNum++;
-                XSSFRow currentRow = sheet.createRow(RowNum);
-                int col = 0;
-                Cell cell = null;
-                cell = currentRow.createCell(col++);
-                cell.setCellType(Cell.CELL_TYPE_NUMERIC);
-                cell.setCellValue(tr.getDate());
-                cell.setCellStyle(dateCellStyle);
-    
-                cell = currentRow.createCell(col++);
-                cell.setCellType(Cell.CELL_TYPE_STRING);
-                cell.setCellValue(tr.getDescription());
-                cell.setCellStyle(wrapAlignCellStyle);
-    
-                cell = currentRow.createCell(col++);
-                cell.setCellType(Cell.CELL_TYPE_NUMERIC);
-                cell.setCellValue(tr.getDebit());
-                cell.setCellStyle(topAlignCellStyle);
-    
-                cell = currentRow.createCell(col++);
-                cell.setCellValue(tr.getComment());
-                cell.setCellType(Cell.CELL_TYPE_STRING);
-                cell.setCellStyle(unlockedCellStyle);
-    
-                cell = currentRow.createCell(col++);
-                cell.setCellValue(tr.getTrType());
-                cell.setCellStyle(unlockedCellStyle);
-    
-                cell = currentRow.createCell(col++);
-                cell.setCellValue(tr.getTaxCategory());
-                cell.setCellStyle(unlockedCellStyle);
-    
-                cell = currentRow.createCell(col++);
-                cell.setCellValue(tr.getProperty());
-                cell.setCellStyle(unlockedCellStyle);
-    
-                cell = currentRow.createCell(col++);
-                cell.setCellValue(tr.getOtherEntity());
-                cell.setCellStyle(unlockedCellStyle);
-    
-                cell = currentRow.createCell(col++);
-                if (tr.isLocked())
-                {
-                    cell.setCellValue("YES");
-                }
-                cell.setCellStyle(unlockedCellStyle);
-    
-            }
-            DataValidationHelper validationHelper = new XSSFDataValidationHelper(sheet);
-            DataValidation trTypeDataValidation = getTrTypeCheckBoxValidation(validationHelper, trMap.size());
-    
-            sheet.addValidationData(trTypeDataValidation);
-    
-            DataValidation taxCategoryDataValidation = getTaxCategoryCheckBoxValidation(validationHelper, trMap.size());
-            sheet.addValidationData(taxCategoryDataValidation);
-    
-            DataValidation propertyDataValidation = getPropertyCheckBoxValidation(validationHelper, trMap.size());
-            sheet.addValidationData(propertyDataValidation);
-    
-            // Chosen P below just in case numbe of column increase in future
-            sheet.setAutoFilter(CellRangeAddress.valueOf("A1:P1"));
-            sheet.setColumnWidth(0, 3000);
-            sheet.setColumnWidth(1, 14000);
-            sheet.setColumnWidth(2, 3000);
-            sheet.setColumnWidth(3, 14000);
-            sheet.setColumnWidth(4, 7000);
-            sheet.setColumnWidth(5, 4000);
-            sheet.setColumnWidth(6, 6000);
-            sheet.setColumnWidth(7, 6000);
-    
-    
-        }
-        String outFile = null;
-        if (file == null)
-        {
-            String dir = System.getProperty("ACCOUNTSDB") + File.separator + "exporttr";
-            File dirFile = new File(dir);
-            if (!dirFile.isDirectory())
-            {
-                dirFile.mkdir();
-            }
-            outFile = dir + File.separator + "summary_allaccounts.xlsx";
-        }
-        File outFileHandle = new File(outFile);
-        if (outFileHandle.exists())
-        {
-            DateFormat df = new SimpleDateFormat("MMddyyyy_HHmmss");
-            Date today = Calendar.getInstance().getTime();
-            String reportDate = df.format(today);
-            outFileHandle.renameTo(new File(outFile + "_" + reportDate + "_old.xlsx"));
-        }
-    
-        FileOutputStream fileOutputStream = new FileOutputStream(outFile);
-        workBook.write(fileOutputStream);
-        fileOutputStream.close();
-        System.out.println("Exported transactions to=" + outFile);
-    
-    }
-    */
+            XSSFRow currentRow = sheet.createRow(0);
 
-    private static void exportToExcel(String accountName, String file, String filter) throws DBException, IOException
+            {
+                Cell cell = currentRow.createCell(0);
+                cell.setCellValue("Property");
+            }
+            int col = 1;
+
+            for (int i = 0; i < scheduleEAry.length; i++)
+            {
+                if (scheduleEAry[i] == null)
+                    continue;
+                Cell cell = null;
+                cell = currentRow.createCell(col++);
+                cell.setCellValue(i + " " + scheduleEAry[i]);
+            }
+        }
+
+        int rowNum = 0;
+        for (String propName : propTable.keySet())
+        {
+            rowNum++;
+            XSSFRow currentRow = sheet.createRow(rowNum);
+            Float[] values = propTable.get(propName);
+            {
+                Cell cell = null;
+                cell = currentRow.createCell(0);
+                cell.setCellValue(propName);
+            }
+
+            int col = 1;
+            for (int i = 0; i < scheduleEAry.length; i++)
+            {
+                if (scheduleEAry[i] == null)
+                    continue;
+                Cell cell = null;
+                cell = currentRow.createCell(col++);
+                if (values[i] != null)
+                    cell.setCellValue(values[i]);
+            }
+
+        }
+        sheet.setColumnWidth(0, 3000);
+        sheet.setColumnWidth(1, 3000);
+        sheet.setColumnWidth(2, 3000);
+        sheet.setColumnWidth(3, 3000);
+        sheet.setColumnWidth(4, 3000);
+        sheet.setColumnWidth(5, 3000);
+        sheet.setColumnWidth(6, 3000);
+        sheet.setColumnWidth(7, 3000);
+    }
+
+    private static void exportToExcel(Map<String, Float[]> propTable, String accountName, String file,
+                                      String filter) throws DBException, IOException
     {
         DBIfc dbIfc = DBFactory.createDBIfc();
 
@@ -926,6 +813,7 @@ public class AccountsMainApp
         wrapAlignCellStyle.setVerticalAlignment(CellStyle.VERTICAL_TOP);
         CellStyle topAlignCellStyle = workBook.createCellStyle();
         topAlignCellStyle.setVerticalAlignment(CellStyle.VERTICAL_TOP);
+        createSummarySheet(workBook, propTable);
 
         Map<String, BankAccount> baMap = new TreeMap<String, BankAccount>(dbIfc.getAccounts());
 
@@ -1358,7 +1246,7 @@ public class AccountsMainApp
         System.out.println("        dir contains csv files with name accountname.csv or accountname_addendum.csv");
         System.out.println("        Recommended to keep all statements under $ACCOUNTSDB/bank_stmts directory\n");
         System.out.println("    -A classifyindb -taxconfig <f> -year <yyyy>\n");
-        System.out.println("    -A exp2excel [-accountname <n>] [-file <f.xlsx>] [-filter \"tr types\"]\n");
+        System.out.println("    -A exp2excel -year <yyyy> [-accountname <n>] [-file <f.xlsx>] [-filter \"tr types\"]\n");
         System.out.println("    -A impexcel [-commit] [-accountname <n>] [-file <f.xlsx>]\n");
         System.out.println("    -A classify_exp -taxconfig <f> -year <yyyy>\n");
 
@@ -1646,7 +1534,8 @@ public class AccountsMainApp
                 }
                 final TaxConfig tc = new TaxConfig(argHash.get("taxconfig"));
                 DBIfc dbIfc = classifyindb(tc);
-                StringBuffer sb = report(new Integer(argHash.get("year")).intValue(), dbIfc, false);
+                Map<String, Float[]> propTable = new TreeMap<String, Float[]>();
+                StringBuffer sb = report(new Integer(argHash.get("year")).intValue(), dbIfc, propTable);
                 if (sb.length() == 0)
                 {
                     System.out.println("Database is empty");
@@ -1657,7 +1546,22 @@ public class AccountsMainApp
 
             } else if (EXP2EXCEL.equalsIgnoreCase(action))
             {
-                exportToExcel(argHash.get("accountname"), argHash.get("file"), argHash.get("filter"));
+                if (argHash.get("year") == null)
+                {
+                    usage("-year argument is required.");
+                }
+                DBIfc dbIfc = DBFactory.createDBIfc();
+                dbIfc.createAndConnectDB(null);
+                Map<String, Float[]> propTable = new TreeMap<String, Float[]>();
+                StringBuffer sb = report(new Integer(argHash.get("year")).intValue(), dbIfc, propTable);
+                if (sb.length() == 0)
+                {
+                    System.out.println("Database is empty");
+                } else
+                {
+                    System.out.println("" + sb);
+                }
+                exportToExcel(propTable, argHash.get("accountname"), argHash.get("file"), argHash.get("filter"));
 
             } else if (IMPEXCEL.equalsIgnoreCase(action))
             {
@@ -1675,7 +1579,16 @@ public class AccountsMainApp
                 }
                 final TaxConfig tc = new TaxConfig(argHash.get("taxconfig"));
                 DBIfc dbIfc = classifyindb(tc);
-                exportToExcel(argHash.get("accountname"), argHash.get("file"), argHash.get("filter"));
+                Map<String, Float[]> propTable = new TreeMap<String, Float[]>();
+                StringBuffer sb = report(new Integer(argHash.get("year")).intValue(), dbIfc, propTable);
+                if (sb.length() == 0)
+                {
+                    System.out.println("Database is empty");
+                } else
+                {
+                    System.out.println("" + sb);
+                }
+                exportToExcel(propTable, argHash.get("accountname"), argHash.get("file"), argHash.get("filter"));
 
             } else if (DELETETRS.equalsIgnoreCase(action))
             {

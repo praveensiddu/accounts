@@ -70,6 +70,10 @@ public class ExcelUtils
         {
             XSSFSheet sheet = workbook.getSheetAt(i);
             String sheetName = workbook.getSheetName(i);
+            if ("RentalSummary".equalsIgnoreCase(sheetName) || "CompanySummary".equalsIgnoreCase(sheetName))
+            {
+                continue;
+            }
             Map<TRId, TR> mapTr = new HashMap<>();
             excelTrMap.put(sheetName, mapTr);
             System.out.println("Processing sheet: " + sheetName);
@@ -78,9 +82,6 @@ public class ExcelUtils
             {
                 throw new IOException("Unknown bank account name in excel=" + sheetName);
             }
-
-            // Get iterator to all the rows in current sheet
-            Iterator<Row> rowIterator = sheet.iterator();
 
             for (int rownum = 1; rownum <= sheet.getLastRowNum(); rownum++)
             {
