@@ -1,6 +1,6 @@
 
-do not hardcode rent percentage deduction in company
-Add summary report to excel
+strategy for 1098
+Add summary of compnay report to excel
 
 delete transaction for whole year
 

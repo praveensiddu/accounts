@@ -14,8 +14,10 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -115,12 +117,12 @@ public class AccountsMainApp
 
     }
 
-    private static StringBuffer report(final int year, final DBIfc dbIfc, Map<String, Float[]> propTable) throws DBException
+    private static StringBuffer report(final int year, final DBIfc dbIfc, Map<String, Float[]> propTable,
+                                       Map<String, ArrayList<TR>> companyTrMap,
+                                       Map<String, ArrayList<TR>> otherTrMap) throws DBException
     {
         final Map<String, ArrayList<TR>> propTrMap = new HashMap<String, ArrayList<TR>>();
         final Map<String, ArrayList<TR>> grpTrMap = new HashMap<String, ArrayList<TR>>();
-        final Map<String, ArrayList<TR>> companyTrMap = new HashMap<String, ArrayList<TR>>();
-        final Map<String, ArrayList<TR>> otherTrMap = new HashMap<String, ArrayList<TR>>();
         Map<String, BankAccount> acctMap = dbIfc.getAccounts();
         Map<String, IGroup> groupsMap = dbIfc.getGroupsMap();
 
@@ -729,7 +731,74 @@ public class AccountsMainApp
         dbi.deleteTransactions(ba.getTrTableId());
     }
 
-    private static void createSummarySheet(XSSFWorkbook workBook, Map<String, Float[]> propTable)
+    private static void createCompanySummarySheet(XSSFWorkbook workBook, final Map<String, ArrayList<TR>> companyTrMap)
+    {
+        XSSFSheet sheet = workBook.createSheet("CompanySummary");
+
+        Map<String, Map<String, Float>> trTypeTotalMap = new HashMap<String, Map<String, Float>>();
+
+        Set<String> setOfCategories = new LinkedHashSet<>();
+
+        for (final String name : companyTrMap.keySet())
+        {
+            final Map<String, Float> trTypeMap = trTypeTotal(companyTrMap.get(name));
+            trTypeTotalMap.put(name, trTypeMap);
+            setOfCategories.addAll(trTypeMap.keySet());
+        }
+        List<String> listCompanies = new ArrayList<String>(companyTrMap.keySet());
+        Collections.sort(listCompanies);
+
+        List<String> listCategories = new ArrayList<String>(setOfCategories);
+        Collections.sort(listCategories);
+
+        {
+            XSSFRow currentRow = sheet.createRow(0);
+            {
+                Cell cell = currentRow.createCell(0);
+                cell.setCellValue("Name");
+            }
+            int col = 1;
+            for (String colName : listCategories)
+
+            {
+                Cell cell = currentRow.createCell(col++);
+                cell.setCellValue(colName);
+            }
+        }
+
+        int rowNum = 0;
+        for (String compName : listCompanies)
+        {
+            rowNum++;
+            XSSFRow currentRow = sheet.createRow(rowNum);
+            {
+                Cell cell = null;
+                cell = currentRow.createCell(0);
+                cell.setCellValue(compName);
+            }
+            final Map<String, Float> compTrTypeMap = trTypeTotalMap.get(compName);
+            int col = 1;
+            for (String colName : listCategories)
+            {
+
+                Cell cell = null;
+                cell = currentRow.createCell(col++);
+                if (compTrTypeMap.get(colName) != null)
+                    cell.setCellValue(compTrTypeMap.get(colName));
+            }
+
+        }
+        sheet.setColumnWidth(0, 3000);
+        sheet.setColumnWidth(1, 3000);
+        sheet.setColumnWidth(2, 3000);
+        sheet.setColumnWidth(3, 3000);
+        sheet.setColumnWidth(4, 3000);
+        sheet.setColumnWidth(5, 3000);
+        sheet.setColumnWidth(6, 3000);
+        sheet.setColumnWidth(7, 3000);
+    }
+
+    private static void createRentalSummarySheet(XSSFWorkbook workBook, Map<String, Float[]> propTable)
     {
         XSSFSheet sheet = workBook.createSheet("RentalSummary");
         {
@@ -785,8 +854,8 @@ public class AccountsMainApp
         sheet.setColumnWidth(7, 3000);
     }
 
-    private static void exportToExcel(Map<String, Float[]> propTable, String accountName, String file,
-                                      String filter) throws DBException, IOException
+    private static void exportToExcel(Map<String, Float[]> propTable, final Map<String, ArrayList<TR>> companyTrMap,
+                                      String accountName, String file, String filter) throws DBException, IOException
     {
         DBIfc dbIfc = DBFactory.createDBIfc();
 
@@ -813,7 +882,8 @@ public class AccountsMainApp
         wrapAlignCellStyle.setVerticalAlignment(CellStyle.VERTICAL_TOP);
         CellStyle topAlignCellStyle = workBook.createCellStyle();
         topAlignCellStyle.setVerticalAlignment(CellStyle.VERTICAL_TOP);
-        createSummarySheet(workBook, propTable);
+        createRentalSummarySheet(workBook, propTable);
+        createCompanySummarySheet(workBook, companyTrMap);
 
         Map<String, BankAccount> baMap = new TreeMap<String, BankAccount>(dbIfc.getAccounts());
 
@@ -1535,7 +1605,10 @@ public class AccountsMainApp
                 final TaxConfig tc = new TaxConfig(argHash.get("taxconfig"));
                 DBIfc dbIfc = classifyindb(tc);
                 Map<String, Float[]> propTable = new TreeMap<String, Float[]>();
-                StringBuffer sb = report(new Integer(argHash.get("year")).intValue(), dbIfc, propTable);
+
+                final Map<String, ArrayList<TR>> companyTrMap = new HashMap<String, ArrayList<TR>>();
+                final Map<String, ArrayList<TR>> otherTrMap = new HashMap<String, ArrayList<TR>>();
+                StringBuffer sb = report(new Integer(argHash.get("year")).intValue(), dbIfc, propTable, companyTrMap, otherTrMap);
                 if (sb.length() == 0)
                 {
                     System.out.println("Database is empty");
@@ -1553,7 +1626,9 @@ public class AccountsMainApp
                 DBIfc dbIfc = DBFactory.createDBIfc();
                 dbIfc.createAndConnectDB(null);
                 Map<String, Float[]> propTable = new TreeMap<String, Float[]>();
-                StringBuffer sb = report(new Integer(argHash.get("year")).intValue(), dbIfc, propTable);
+                final Map<String, ArrayList<TR>> companyTrMap = new HashMap<String, ArrayList<TR>>();
+                final Map<String, ArrayList<TR>> otherTrMap = new HashMap<String, ArrayList<TR>>();
+                StringBuffer sb = report(new Integer(argHash.get("year")).intValue(), dbIfc, propTable, companyTrMap, otherTrMap);
                 if (sb.length() == 0)
                 {
                     System.out.println("Database is empty");
@@ -1561,7 +1636,7 @@ public class AccountsMainApp
                 {
                     System.out.println("" + sb);
                 }
-                exportToExcel(propTable, argHash.get("accountname"), argHash.get("file"), argHash.get("filter"));
+                exportToExcel(propTable, companyTrMap, argHash.get("accountname"), argHash.get("file"), argHash.get("filter"));
 
             } else if (IMPEXCEL.equalsIgnoreCase(action))
             {
@@ -1580,7 +1655,9 @@ public class AccountsMainApp
                 final TaxConfig tc = new TaxConfig(argHash.get("taxconfig"));
                 DBIfc dbIfc = classifyindb(tc);
                 Map<String, Float[]> propTable = new TreeMap<String, Float[]>();
-                StringBuffer sb = report(new Integer(argHash.get("year")).intValue(), dbIfc, propTable);
+                final Map<String, ArrayList<TR>> companyTrMap = new HashMap<String, ArrayList<TR>>();
+                final Map<String, ArrayList<TR>> otherTrMap = new HashMap<String, ArrayList<TR>>();
+                StringBuffer sb = report(new Integer(argHash.get("year")).intValue(), dbIfc, propTable, companyTrMap, otherTrMap);
                 if (sb.length() == 0)
                 {
                     System.out.println("Database is empty");
@@ -1588,7 +1665,7 @@ public class AccountsMainApp
                 {
                     System.out.println("" + sb);
                 }
-                exportToExcel(propTable, argHash.get("accountname"), argHash.get("file"), argHash.get("filter"));
+                exportToExcel(propTable, companyTrMap, argHash.get("accountname"), argHash.get("file"), argHash.get("filter"));
 
             } else if (DELETETRS.equalsIgnoreCase(action))
             {
