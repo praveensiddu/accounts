@@ -27,6 +27,7 @@ public class DBImpl implements DBIfc
     private EntityManagerFactory      factory;
     private Map<String, BankAccount>  accountsMap;
     private Map<String, RealProperty> propertiesMap;
+    private Map<String, Company>      companiesMap;
     private Map<String, IGroup>       groupsMap;
 
     private void createOtherDirectories(String dir) throws IOException
@@ -76,7 +77,7 @@ public class DBImpl implements DBIfc
 
         String samplesDir = dir + File.separator + "samples";
 
-        String samplesFiles[] = { "bankaccounts.csv", "properties.csv", "groups.csv" };
+        String samplesFiles[] = { "bankaccounts.csv", "properties.csv", "groups.csv", "companies.csv" };
         for (String sampleFile : samplesFiles)
         {
             File fmtFile = new File(samplesDir + File.separator + sampleFile);
@@ -129,6 +130,7 @@ public class DBImpl implements DBIfc
         List<BankAccount> acList = em.createNamedQuery("BankAccount.getList", BankAccount.class).getResultList();
         List<RealProperty> propList = em.createNamedQuery("RealProperty.getList", RealProperty.class).getResultList();
         List<IGroup> groupList = em.createNamedQuery("IGroup.getList", IGroup.class).getResultList();
+        List<Company> companyList = em.createNamedQuery("Company.getList", Company.class).getResultList();
         em.close();
         accountsMap = new HashMap<String, BankAccount>();
         for (BankAccount ba : acList)
@@ -144,6 +146,11 @@ public class DBImpl implements DBIfc
         for (IGroup group : groupList)
         {
             groupsMap.put(group.getName(), group);
+        }
+        companiesMap = new HashMap<String, Company>();
+        for (Company prop : companyList)
+        {
+            companiesMap.put(prop.getName(), prop);
         }
     }
 
@@ -286,6 +293,106 @@ public class DBImpl implements DBIfc
     }
 
     @Override
+    public void updateProperty(RealProperty prop) throws DBException
+    {
+        throw new DBException(DBException.NOTIMPLEMENTED, "Not implemented");
+    }
+
+    @Override
+    public void deleteProperty(String name) throws DBException
+    {
+        if (name == null)
+            throw new DBException(DBException.INVALID_INPUT, "property name is null");
+        name = name.trim().toLowerCase();
+        if (name.isEmpty())
+            throw new DBException(DBException.INVALID_INPUT, "property name is empty");
+        if (!propertiesMap.containsKey(name))
+        {
+            return;
+            // throw new DBException(DBException.NOTPRESENT,
+            // "property not present=" + name);
+        }
+        EntityManager em = factory.createEntityManager();
+        try
+        {
+            em.getTransaction().begin();
+            RealProperty ba = em.find(RealProperty.class, name);
+            em.remove(ba);
+            em.getTransaction().commit();
+            propertiesMap.remove(name);
+        } finally
+        {
+            em.close();
+        }
+
+    }
+
+    @Override
+    public void createCompany(Company prop) throws DBException
+    {
+        if (prop == null)
+            throw new DBException(DBException.INVALID_INPUT, "name is null");
+        if (prop.getName() == null || prop.getName().isEmpty())
+            throw new DBException(DBException.INVALID_INPUT, "name is empty");
+
+        EntityManager em = factory.createEntityManager();
+        try
+        {
+            em.getTransaction().begin();
+
+            Company rp = em.find(Company.class, prop.getName());
+            if (rp == null)
+            {
+                em.persist(prop);
+            } else
+            {
+                em.merge(prop);
+            }
+            em.getTransaction().commit();
+            companiesMap.put(prop.getName(), prop);
+        } finally
+        {
+            em.close();
+        }
+
+    }
+
+    @Override
+    public void updateCompany(Company prop) throws DBException
+    {
+        throw new DBException(DBException.NOTIMPLEMENTED, "Not implemented");
+    }
+
+    @Override
+    public void deleteCompany(String name) throws DBException
+    {
+        if (name == null)
+            throw new DBException(DBException.INVALID_INPUT, "name is null");
+        name = name.trim().toLowerCase();
+        if (name.isEmpty())
+            throw new DBException(DBException.INVALID_INPUT, "name is empty");
+        if (!companiesMap.containsKey(name))
+        {
+            return;
+            // throw new DBException(DBException.NOTPRESENT,
+            // "property not present=" + name);
+        }
+        EntityManager em = factory.createEntityManager();
+        try
+        {
+            em.getTransaction().begin();
+            Company ba = em.find(Company.class, name);
+            em.remove(ba);
+            em.getTransaction().commit();
+            companiesMap.remove(name);
+        } finally
+        {
+            em.close();
+        }
+
+    }
+
+    @Override
     public void createGroup(IGroup group) throws DBException
     {
         if (group == null)
@@ -334,41 +441,6 @@ public class DBImpl implements DBIfc
             em.remove(ba);
             em.getTransaction().commit();
             groupsMap.remove(name);
-        } finally
-        {
-            em.close();
-        }
-
-    }
-
-    @Override
-    public void updateProperty(RealProperty prop) throws DBException
-    {
-        throw new DBException(DBException.NOTIMPLEMENTED, "Not implemented");
-    }
-
-    @Override
-    public void deleteProperty(String name) throws DBException
-    {
-        if (name == null)
-            throw new DBException(DBException.INVALID_INPUT, "property name is null");
-        name = name.trim().toLowerCase();
-        if (name.isEmpty())
-            throw new DBException(DBException.INVALID_INPUT, "property name is empty");
-        if (!propertiesMap.containsKey(name))
-        {
-            return;
-            // throw new DBException(DBException.NOTPRESENT,
-            // "property not present=" + name);
-        }
-        EntityManager em = factory.createEntityManager();
-        try
-        {
-            em.getTransaction().begin();
-            RealProperty ba = em.find(RealProperty.class, name);
-            em.remove(ba);
-            em.getTransaction().commit();
-            propertiesMap.remove(name);
         } finally
         {
             em.close();
@@ -441,6 +513,12 @@ public class DBImpl implements DBIfc
     public Map<String, RealProperty> getProperties() throws DBException
     {
         return propertiesMap;
+    }
+
+    @Override
+    public Map<String, Company> getCompanies() throws DBException
+    {
+        return companiesMap;
     }
 
     @Override
@@ -583,6 +661,63 @@ public class DBImpl implements DBIfc
         return aL;
     }
 
+    public static List<Company> parseCompanyFile(String filename) throws IOException, ParseException
+    {
+
+        final FileReader fr = new FileReader(filename);
+        final BufferedReader br = new BufferedReader(fr);
+        List<Company> rpL = new ArrayList<Company>();
+        try
+        {
+            for (String line; (line = br.readLine()) != null;)
+            {
+                line = line.toLowerCase().trim();
+                if (line.isEmpty())
+                {
+                    continue;
+                }
+                line = line.toLowerCase().trim();
+                if (line.isEmpty() || line.startsWith("#") || line.startsWith(","))
+                {
+                    continue;
+                }
+                String[] fields = line.split(",", -1);
+                if (fields.length != 2)
+                {
+                    throw new IOException("Invalid company line=" + line);
+                }
+
+                Company rp = new Company();
+                rp.setName(fields[0]);
+                rp.setRentPercentage(new Integer(fields[1]).floatValue());
+                rpL.add(rp);
+            }
+        } finally
+        {
+            if (br != null)
+            {
+                try
+                {
+                    br.close();
+                } catch (final IOException e)
+                {
+                    // Ignore
+                }
+            }
+            if (fr != null)
+            {
+                try
+                {
+                    fr.close();
+                } catch (final IOException e)
+                {
+                    // Ignore
+                }
+            }
+        }
+        return rpL;
+    }
+
     public static List<RealProperty> parsePropFile(String filename) throws IOException, ParseException
     {
 
@@ -604,9 +739,10 @@ public class DBImpl implements DBIfc
                     continue;
                 }
                 String[] fields = line.split(",", -1);
-                if (fields.length != 7)
+                if (fields.length != 8)
                 {
-                    throw new IOException("Invalid property line=" + line);
+                    throw new IOException(
+                            "Invalid property line=" + line + "\nRequired number of fields=" + 8 + ", Found=" + fields.length);
                 }
 
                 RealProperty rp = new RealProperty();
@@ -620,6 +756,7 @@ public class DBImpl implements DBIfc
                 Date purchaseDate = formatter.parse(fields[6]);
 
                 rp.setPurchaseDate(purchaseDate);
+                rp.setPropMgmtCompany(fields[7]);
                 rpL.add(rp);
             }
         } finally
@@ -937,7 +1074,7 @@ public class DBImpl implements DBIfc
     }
 
     @Override
-    public Map<String, IGroup> getGropusMap() throws DBException
+    public Map<String, IGroup> getGroupsMap() throws DBException
     {
         return groupsMap;
     }

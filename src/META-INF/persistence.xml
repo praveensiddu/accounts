@@ -7,6 +7,7 @@
     <class>accounts.db.TRId</class>
     <class>accounts.db.TR</class>
     <class>accounts.db.RealProperty</class>
+    <class>accounts.db.Company</class>
     <class>accounts.db.IGroup</class>
     <class>accounts.db.inst.TR1</class>
     <class>accounts.db.inst.TR2</class>

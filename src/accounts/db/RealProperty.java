@@ -19,6 +19,21 @@ public class RealProperty
     private int            loanClosingCost = -1;
     private int            ownerCount      = 1;
     private java.util.Date purchaseDate;
+    @Column(length = 40)
+    private String         propMgmtCompany;
+
+    public String getPropMgmtCompany()
+    {
+        return propMgmtCompany;
+    }
+
+    public void setPropMgmtCompany(String propMgmtCompany)
+    {
+        if (!propMgmtCompany.startsWith("c_"))
+            propMgmtCompany = "c_" + propMgmtCompany;
+
+        this.propMgmtCompany = propMgmtCompany.trim().toLowerCase();
+    }
 
     public String getPropertyName()
     {

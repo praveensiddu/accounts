@@ -18,10 +18,10 @@ public class IGroup
 {
     @Id
     @Column(length = 40)
-    private String       name;
+    private String name;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "MEMBER", joinColumns = @JoinColumn(name = "GROUP_NAME"))
+    @CollectionTable(name = "MEMBER", joinColumns = @JoinColumn(name = "GROUP_NAME") )
     private List<String> members;
 
     public List<String> getMembers()
@@ -43,6 +43,9 @@ public class IGroup
     {
         if (name == null)
             return;
+
+        if (!name.startsWith("g_"))
+            name = "g_" + name;
         this.name = name.trim().toLowerCase();
     }
 

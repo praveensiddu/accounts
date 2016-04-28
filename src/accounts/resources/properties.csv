@@ -1,3 +1,3 @@
-#property,cost,landValue,renovation,loanClosingCOst,ownerCount,purchseDate
+#property,cost,landValue,renovation,loanClosingCOst,ownerCount,purchseDate,PropMgmtCompany
 
-#4085mystreet,111800,0,0,0,1,10/16/2009
+#4085mystreet,111800,0,0,0,1,10/16/2009,Apex

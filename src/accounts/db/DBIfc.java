@@ -19,13 +19,21 @@ public interface DBIfc
 
     void deleteProperty(String name) throws DBException;
 
+    void createCompany(Company name) throws DBException;
+
+    void updateCompany(Company comp) throws DBException;
+
+    void deleteCompany(String name) throws DBException;
+
     boolean tableExists(final String tablename) throws DBException;
 
     Map<String, BankAccount> getAccounts() throws DBException;
 
     Map<String, RealProperty> getProperties() throws DBException;
 
-    Map<String, IGroup> getGropusMap() throws DBException;
+    Map<String, Company> getCompanies() throws DBException;
+
+    Map<String, IGroup> getGroupsMap() throws DBException;
 
     Map<TRId, TR> getTransactions(int tableId) throws DBException;
 

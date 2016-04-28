@@ -1,13 +1,8 @@
-Summary for other entity
 
 do not hardcode rent percentage deduction in company
 Add summary report to excel
 
-
-
-
-amex bank statement format should change instead of year end report
-
+delete transaction for whole year
 
 remove unwanted usage
 
