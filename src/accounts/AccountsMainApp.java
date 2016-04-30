@@ -313,6 +313,8 @@ public class AccountsMainApp
         return sb;
     }
 
+    public static final float DEFAULT_RENT_DIST_PERCENTAGE = 94;
+
     private static StringBuffer reportFromPropMap(final Map<String, ArrayList<TR>> propTrMap,
                                                   final Map<String, ArrayList<TR>> groupTrMap, final DBIfc dbIfc,
                                                   final Map<String, IGroup> groupsMap,
@@ -378,7 +380,7 @@ public class AccountsMainApp
                 rp = propertyMap.get(propName);
                 ownerCount = rp.getOwnerCount();
             }
-            float rentPercentage = 94;
+            float rentPercentage = DEFAULT_RENT_DIST_PERCENTAGE;
             if (rp.getPropMgmtCompany() != null)
             {
                 if (dbIfc.getCompanies().containsKey(rp.getPropMgmtCompany()))
@@ -751,6 +753,8 @@ public class AccountsMainApp
         dbi.deleteTransactions(ba.getTrTableId());
     }
 
+    public static final String COMP_CATEGORY_INCOME = "1. Income";
+
     private static void createCompanySummarySheet(XSSFWorkbook workBook, DBIfc dbIfc, Map<String, Float[]> propTable,
                                                   final Map<String, ArrayList<TR>> companyTrMap,
                                                   final Map<String, ArrayList<TR>> otherTrMap) throws DBException
@@ -761,7 +765,7 @@ public class AccountsMainApp
 
         Set<String> setOfCategories = new LinkedHashSet<>();
 
-        setOfCategories.add("1. Income"); // Make it the first column
+        setOfCategories.add(COMP_CATEGORY_INCOME); // Make it the first column
 
         for (final String compName : companyTrMap.keySet())
         {
@@ -789,7 +793,7 @@ public class AccountsMainApp
                 trTypeMap = new HashMap<String, Float>();
                 trTypeTotalMap.put(mgmtComp, trTypeMap);
             }
-            Float income = trTypeMap.get("1. Income");
+            Float income = trTypeMap.get(COMP_CATEGORY_INCOME);
             if (income == null)
             {
                 income = propTable.get(propName)[scheduleEMap.get(RENT)];
@@ -797,7 +801,7 @@ public class AccountsMainApp
             {
                 income += propTable.get(propName)[scheduleEMap.get(RENT)];
             }
-            trTypeMap.put("1. Income", income);
+            trTypeMap.put(COMP_CATEGORY_INCOME, income);
 
         }
         for (final String name : otherTrMap.keySet())
@@ -830,6 +834,10 @@ public class AccountsMainApp
             }
             {// Profit column is the last
                 Cell cell = currentRow.createCell(col++);
+                cell.setCellValue("RentDistribution");
+            }
+            {// Profit column is the last
+                Cell cell = currentRow.createCell(col++);
                 cell.setCellValue("Profit");
             }
         }
@@ -857,7 +865,21 @@ public class AccountsMainApp
                     cell.setCellValue(compTrTypeMap.get(colName));
                 }
             }
+            Float income = compTrTypeMap.get(COMP_CATEGORY_INCOME);
             Cell cell = currentRow.createCell(col++);
+            if (income != null)
+            {
+                float distPercent = DEFAULT_RENT_DIST_PERCENTAGE;
+                if (dbIfc.getCompanies() != null && dbIfc.getCompanies().containsKey(compName))
+                {
+                    Company compObj = dbIfc.getCompanies().get(compName);
+                    distPercent = (100 - compObj.getRentPercentage());
+                }
+                float dist = -(income * distPercent / 100);
+                cell.setCellValue(dist);
+                profit += dist;
+            }
+            cell = currentRow.createCell(col++);
             cell.setCellValue(profit);
 
         }
