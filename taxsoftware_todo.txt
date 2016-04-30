@@ -1,5 +1,6 @@
+export excel should export only that year
 
-TotalExpense should be added to property 
+
 strategy for 1098
 
 delete transaction for whole year

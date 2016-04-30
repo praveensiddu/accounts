@@ -611,7 +611,8 @@ public class AccountsMainApp
         ExcelUtils eu = new ExcelUtils(baMap);
         Map<String, Map<TRId, TR>> excelTrMap = eu.processAllSheets(excelFile, dbIfc.getAccounts());
         Map<String, RealProperty> propMap = dbIfc.getProperties();
-        Map<String, Map<TRId, TR>> changedBaMap = eu.importCheck(excelTrMap, propMap);
+        Map<String, Company> compMap = dbIfc.getCompanies();
+        Map<String, Map<TRId, TR>> changedBaMap = eu.importCheck(excelTrMap, propMap, compMap);
 
         if (changedBaMap.size() == 0)
         {
@@ -893,7 +894,7 @@ public class AccountsMainApp
             cell.setCellValue(totalProfit);
 
         }
-        sheet.setColumnWidth(0, 3000);
+        sheet.setColumnWidth(0, 4000);
         sheet.setColumnWidth(1, 3000);
         sheet.setColumnWidth(2, 3000);
         sheet.setColumnWidth(3, 3000);

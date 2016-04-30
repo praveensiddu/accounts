@@ -40,6 +40,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import accounts.db.BankAccount;
+import accounts.db.Company;
 import accounts.db.DBException;
 import accounts.db.DBFactory;
 import accounts.db.RealProperty;
@@ -196,8 +197,8 @@ public class ExcelUtils
         return listFiles;
     }
 
-    public Map<String, Map<TRId, TR>> importCheck(Map<String, Map<TRId, TR>> excelTrMap,
-                                                  Map<String, RealProperty> propMap) throws AccountExp
+    public Map<String, Map<TRId, TR>> importCheck(Map<String, Map<TRId, TR>> excelTrMap, Map<String, RealProperty> propMap,
+                                                  Map<String, Company> compMap) throws AccountExp
     {
         Map<String, Map<TRId, TR>> importMap = new TreeMap<>();
         for (String bankAccount : excelTrMap.keySet())
@@ -231,8 +232,20 @@ public class ExcelUtils
                         {
                             if (!propMap.containsKey(trToImport.getProperty()))
                             {
-                                throw new AccountExp(AccountExp.NOTPRESENT, "Unknown property=\"" + trToImport.getProperty()
-                                        + "\" in " + bankAccount + "\nAllowed list=" + propMap.keySet());
+                                if (compMap == null)
+                                {
+                                    throw new AccountExp(AccountExp.NOTPRESENT,
+                                            "Unknown property or company=\"" + trToImport.getProperty() + "\" in " + bankAccount
+                                                    + "\nAllowed list=" + propMap.keySet());
+                                } else
+                                {
+                                    if (!compMap.containsKey(trToImport.getProperty()))
+                                    {
+                                        throw new AccountExp(AccountExp.NOTPRESENT,
+                                                "Unknown property or company=\"" + trToImport.getProperty() + "\" in "
+                                                        + bankAccount + "\nAllowed list=" + propMap.keySet() + compMap.keySet());
+                                    }
+                                }
                             }
                         }
 
@@ -290,7 +303,7 @@ public class ExcelUtils
         Map<String, Map<TRId, TR>> baMap = getBankTransactionMapFromCsv(args[0]);
         final ExcelUtils howto = new ExcelUtils(baMap);
         Map<String, Map<TRId, TR>> excelTrMap = howto.processAllSheets(args[1]);
-        howto.importCheck(excelTrMap, null);
+        howto.importCheck(excelTrMap, null, null);
         // howto.processAllSheets(args[0]);
     }
 }
