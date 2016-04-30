@@ -857,10 +857,11 @@ public class AccountsMainApp
             {
                 if (scheduleEAry[i] == null)
                     continue;
-                Cell cell = null;
-                cell = currentRow.createCell(col++);
+                Cell cell = currentRow.createCell(col++);
                 cell.setCellValue(i + " " + scheduleEAry[i]);
             }
+            Cell cell = currentRow.createCell(col++);
+            cell.setCellValue("Profit");
         }
 
         int rowNum = 0;
@@ -870,21 +871,25 @@ public class AccountsMainApp
             XSSFRow currentRow = sheet.createRow(rowNum);
             Float[] values = propTable.get(propName);
             {
-                Cell cell = null;
-                cell = currentRow.createCell(0);
+                Cell cell = currentRow.createCell(0);
                 cell.setCellValue(propName);
             }
+            float totalProfit = 0;
 
             int col = 1;
             for (int i = 0; i < scheduleEAry.length; i++)
             {
                 if (scheduleEAry[i] == null)
                     continue;
-                Cell cell = null;
-                cell = currentRow.createCell(col++);
+                Cell cell = currentRow.createCell(col++);
                 if (values[i] != null)
+                {
+                    totalProfit += values[i];
                     cell.setCellValue(values[i]);
+                }
             }
+            Cell cell = currentRow.createCell(col++);
+            cell.setCellValue(totalProfit);
 
         }
         sheet.setColumnWidth(0, 3000);
@@ -895,6 +900,10 @@ public class AccountsMainApp
         sheet.setColumnWidth(5, 3000);
         sheet.setColumnWidth(6, 3000);
         sheet.setColumnWidth(7, 3000);
+        sheet.setColumnWidth(8, 3000);
+        sheet.setColumnWidth(9, 3000);
+        sheet.setColumnWidth(10, 3000);
+        sheet.setColumnWidth(11, 3000);
     }
 
     private static void exportToExcel(Map<String, Float[]> propTable, final Map<String, ArrayList<TR>> companyTrMap,
