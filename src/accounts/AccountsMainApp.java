@@ -191,16 +191,33 @@ public class AccountsMainApp
                 }
             } else if ("company".equalsIgnoreCase(tr.getTaxCategory()))
             {
-                //
-                if (companyTrMap.containsKey(tr.getOtherEntity()))
+                String compName = tr.getProperty();// Property col can be used for company
+
+                if (compName == null || compName.isEmpty())
                 {
-                    final ArrayList<TR> arrTr = companyTrMap.get(tr.getOtherEntity());
+                    compName = tr.getOtherEntity();
+                    if (compName == null || compName.isEmpty())
+                    {
+                        compName = "c_";
+                    } else
+                    {
+                        if (!compName.startsWith("c_"))
+                            compName = "c_" + compName;
+                    }
+                } else
+                {
+                    if (!compName.startsWith("c_"))
+                        compName = "c_" + compName;
+                }
+                if (companyTrMap.containsKey(compName))
+                {
+                    final ArrayList<TR> arrTr = companyTrMap.get(compName);
                     arrTr.add(tr);
                 } else
                 {
                     final ArrayList<TR> arrTr = new ArrayList<TR>();
                     arrTr.add(tr);
-                    companyTrMap.put(tr.getOtherEntity(), arrTr);
+                    companyTrMap.put(compName, arrTr);
                     continue;
                 }
             } else if ("realestate".equalsIgnoreCase(tr.getTaxCategory()))
