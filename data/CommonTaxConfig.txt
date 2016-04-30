@@ -79,9 +79,9 @@ TRANSACTION_TYPE=tax
 DESC_CONTAINS=county of ffx
 
 
-TRANSACTION_TYPE=professionalfees
+TRANSACTION_TYPE=proffees
 DESC_CONTAINS=E-RENTER
-TRANSACTION_TYPE=professionalfees
+TRANSACTION_TYPE=proffees
 DESC_CONTAINS=legalcontracts.com
 
 

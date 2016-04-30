@@ -51,7 +51,7 @@ public class AccountsMainApp
     public static final String               RENT             = "rent";
     public static final String               COMMISSIONS      = "commissions";
     public static final String               INSURANCE        = "insurance";
-    public static final String               PROFESSIONALFEES = "professionalfees";
+    public static final String               PROFFEES         = "proffees";
     public static final String               MORTGAGEINTEREST = "mortgageinterest";
     public static final String               REPAIRS          = "repairs";
     public static final String               TAX              = "tax";
@@ -61,26 +61,27 @@ public class AccountsMainApp
     public static final String               BANKFEES         = "bankfees";
     public static final String               PROFIT           = "profit";
     public static final String               OTHER            = "other";
+    public static final String               IGNORE           = "ignore";
     public static final Map<String, Integer> scheduleEMap;
     public static final String[]             scheduleEAry     = { null, null, null, RENT, null, null, null, null, COMMISSIONS,
-            INSURANCE, PROFESSIONALFEES, null, MORTGAGEINTEREST, null, REPAIRS, null, TAX, UTILITIES, DEPRECIATION, HOA, OTHER };
+            INSURANCE, PROFFEES, null, MORTGAGEINTEREST, null, REPAIRS, null, TAX, UTILITIES, DEPRECIATION, HOA, OTHER };
 
     public static final Map<String, String> TRTYPE_MAP = new HashMap<>();
 
     static
     {
-        TRTYPE_MAP.put("rent", "");
-        TRTYPE_MAP.put("commissions", "");
-        TRTYPE_MAP.put("insurance", "");
-        TRTYPE_MAP.put("professionalfees", "");
-        TRTYPE_MAP.put("mortgageinterest", "");
-        TRTYPE_MAP.put("repairs", "");
-        TRTYPE_MAP.put("tax", "");
-        TRTYPE_MAP.put("utilities", "");
-        TRTYPE_MAP.put("depreciation", "");
-        TRTYPE_MAP.put("hoa", "");
-        TRTYPE_MAP.put("bankfees", "");
-        TRTYPE_MAP.put("ignore", "");
+        TRTYPE_MAP.put(RENT, "");
+        TRTYPE_MAP.put(COMMISSIONS, "");
+        TRTYPE_MAP.put(INSURANCE, "");
+        TRTYPE_MAP.put(PROFFEES, "");
+        TRTYPE_MAP.put(MORTGAGEINTEREST, "");
+        TRTYPE_MAP.put(REPAIRS, "");
+        TRTYPE_MAP.put(TAX, "");
+        TRTYPE_MAP.put(UTILITIES, "");
+        TRTYPE_MAP.put(DEPRECIATION, "");
+        TRTYPE_MAP.put(HOA, "");
+        TRTYPE_MAP.put(BANKFEES, "");
+        TRTYPE_MAP.put(IGNORE, "");
     }
 
     static
@@ -89,7 +90,7 @@ public class AccountsMainApp
         scheduleEMap.put(RENT, 3);
         scheduleEMap.put(COMMISSIONS, 8);
         scheduleEMap.put(INSURANCE, 9);
-        scheduleEMap.put(PROFESSIONALFEES, 10);
+        scheduleEMap.put(PROFFEES, 10);
         scheduleEMap.put(MORTGAGEINTEREST, 12);
         scheduleEMap.put(REPAIRS, 14);
         scheduleEMap.put(TAX, 16);
@@ -1215,9 +1216,9 @@ public class AccountsMainApp
                 for (final RuleRecord rr : arr)
                 {
                     String propertyInRR = rr.getProperty();
-                    String otherEntityInRR = rr.getProperty();
-                    String taxCategoryInRR = rr.getProperty();
-                    String trTypeInRR = rr.getProperty();
+                    String otherEntityInRR = rr.getOtherEntity();
+                    String taxCategoryInRR = rr.getTaxCategory();
+                    String trTypeInRR = rr.getTrType();
                     if (propertyInRR == null)
                         propertyInRR = "";
                     if (otherEntityInRR == null)

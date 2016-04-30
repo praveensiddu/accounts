@@ -4,12 +4,12 @@ public class RuleRecord
 {
 
     private String currentAccount = null;
-    private String trType         = "";
+    private String trType         = null;
     private String descContains   = null;
     private String descStartsWith = null;
-    private String taxCategory    = "";
-    private String property       = "";
-    private String otherEntity    = "";
+    private String taxCategory    = null;
+    private String property       = null;
+    private String otherEntity    = null;
     private Float  debitEquals    = (float) 0;
     private int    lineno         = 0;
 

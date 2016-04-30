@@ -1,12 +1,13 @@
 rent
 commissions
 insurance
-professionalfees
+proffees
 mortgageinterest
 repairs
 tax
 utilities
 depreciation
+reno
 hoa
 bankfees
 ignore

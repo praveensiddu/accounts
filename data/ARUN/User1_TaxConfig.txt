@@ -95,15 +95,15 @@ TRANSACTION_TYPE=hoa
 DESC_CONTAINS=reston assn
 
 PROPERTY=14495rustlingleaves
-TRANSACTION_TYPE=professionalfees
+TRANSACTION_TYPE=proffees
 DESC_CONTAINS=hale ball
 
 PROPERTY=14495rustlingleaves
-TRANSACTION_TYPE=professionalfees
+TRANSACTION_TYPE=proffees
 DESC_CONTAINS=HALE CARLSON
 
 PROPERTY=14495rustlingleaves
-TRANSACTION_TYPE=professionalfees
+TRANSACTION_TYPE=proffees
 DESC_CONTAINS=legalcontracts.com
 
 
