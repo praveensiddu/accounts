@@ -572,15 +572,15 @@ public class AccountsMainApp
             }
             System.out.println("Reading transactions for " + ba.getName());
             Map<TRId, TR> trs = readTransactions(dbIfc, ba, outfile);
-            int count = dbIfc.updateTransactions(trs, false);
+            int count = dbIfc.updateTransactions(trs, false, false);
             System.out.println("Updated transactions for " + ba.getName() + ", Count=" + count);
         }
         System.out.println("Import transactions completed ");
 
     }
 
-    private static void importFromExcel(String accountName, String file, boolean commit) throws DBException, IOException,
-                                                                                         ParseException, AccountExp
+    private static void importFromExcel(String accountName, String file, boolean commit,
+                                        boolean setasis) throws DBException, IOException, ParseException, AccountExp
     {
         DBIfc dbIfc = DBFactory.createDBIfc();
         AccountsUtil.createInstance();
@@ -627,9 +627,7 @@ public class AccountsMainApp
 
         ExcelUtils eu = new ExcelUtils(baMap);
         Map<String, Map<TRId, TR>> excelTrMap = eu.processAllSheets(excelFile, dbIfc.getAccounts());
-        Map<String, RealProperty> propMap = dbIfc.getProperties();
-        Map<String, Company> compMap = dbIfc.getCompanies();
-        Map<String, Map<TRId, TR>> changedBaMap = eu.importCheck(excelTrMap, propMap, compMap);
+        Map<String, Map<TRId, TR>> changedBaMap = eu.importCheck(excelTrMap, dbIfc);
 
         if (changedBaMap.size() == 0)
         {
@@ -655,12 +653,15 @@ public class AccountsMainApp
                 {
                     System.out.println("Committing BankAccount=" + bankAccount);
                     Map<TRId, TR> changedTrMap = changedBaMap.get(bankAccount);
-                    for (TR tr : changedTrMap.values())
+                    if (!setasis)
                     {
-                        // To Mark that it was manually updated and should not be changed by automatic classification
-                        tr.setLocked(true);
+                        for (TR changedTr : changedTrMap.values())
+                        {
+                            // To Mark that it was manually updated and should not be changed by automatic classification
+                            changedTr.setLocked(true);
+                        }
                     }
-                    int count = dbIfc.updateTransactions(changedTrMap, false);
+                    int count = dbIfc.updateTransactions(changedTrMap, false, setasis);
                     System.out.println("Number of records updated=" + count);
                 }
 
@@ -750,8 +751,9 @@ public class AccountsMainApp
         dbi.deleteTransactions(ba.getTrTableId());
     }
 
-    private static void createCompanySummarySheet(XSSFWorkbook workBook, final Map<String, ArrayList<TR>> companyTrMap,
-                                                  final Map<String, ArrayList<TR>> otherTrMap)
+    private static void createCompanySummarySheet(XSSFWorkbook workBook, DBIfc dbIfc, Map<String, Float[]> propTable,
+                                                  final Map<String, ArrayList<TR>> companyTrMap,
+                                                  final Map<String, ArrayList<TR>> otherTrMap) throws DBException
     {
         XSSFSheet sheet = workBook.createSheet("CompanySummary");
 
@@ -759,11 +761,44 @@ public class AccountsMainApp
 
         Set<String> setOfCategories = new LinkedHashSet<>();
 
-        for (final String name : companyTrMap.keySet())
+        setOfCategories.add("1. Income"); // Make it the first column
+
+        for (final String compName : companyTrMap.keySet())
         {
-            final Map<String, Float> trTypeMap = trTypeTotal(companyTrMap.get(name));
-            trTypeTotalMap.put(name, trTypeMap);
+            final Map<String, Float> trTypeMap = trTypeTotal(companyTrMap.get(compName));
+            trTypeTotalMap.put(compName, trTypeMap);
             setOfCategories.addAll(trTypeMap.keySet());
+        }
+        // Income for company is consolidated here
+        for (String propName : propTable.keySet())
+        {
+            // Find the company which manages it
+            String mgmtComp = "Unknown";
+            if (dbIfc.getProperties() != null && dbIfc.getProperties().containsKey(propName))
+            {
+                RealProperty rp = dbIfc.getProperties().get(propName);
+                if (rp.getPropMgmtCompany() != null)
+                {
+                    mgmtComp = rp.getPropMgmtCompany();
+                }
+            }
+            ;
+            Map<String, Float> trTypeMap = trTypeTotalMap.get(mgmtComp);
+            if (trTypeMap == null)
+            {
+                trTypeMap = new HashMap<String, Float>();
+                trTypeTotalMap.put(mgmtComp, trTypeMap);
+            }
+            Float income = trTypeMap.get("1. Income");
+            if (income == null)
+            {
+                income = propTable.get(propName)[scheduleEMap.get(RENT)];
+            } else
+            {
+                income += propTable.get(propName)[scheduleEMap.get(RENT)];
+            }
+            trTypeMap.put("1. Income", income);
+
         }
         for (final String name : otherTrMap.keySet())
         {
@@ -780,18 +815,22 @@ public class AccountsMainApp
         List<String> listCategories = new ArrayList<String>(setOfCategories);
         Collections.sort(listCategories);
 
-        {
+        {// Create header
+
             XSSFRow currentRow = sheet.createRow(0);
-            {
-                Cell cell = currentRow.createCell(0);
+            int col = 0;
+            {// Company name column
+                Cell cell = currentRow.createCell(col++);
                 cell.setCellValue("Name");
             }
-            int col = 1;
             for (String colName : listCategories)
-
             {
                 Cell cell = currentRow.createCell(col++);
                 cell.setCellValue(colName);
+            }
+            {// Profit column is the last
+                Cell cell = currentRow.createCell(col++);
+                cell.setCellValue("Profit");
             }
         }
 
@@ -799,22 +838,27 @@ public class AccountsMainApp
         for (String compName : listCompanies)
         {
             rowNum++;
+            int col = 0;
             XSSFRow currentRow = sheet.createRow(rowNum);
             {
-                Cell cell = null;
-                cell = currentRow.createCell(0);
+                Cell cell = currentRow.createCell(col++);
                 cell.setCellValue(compName);
             }
             final Map<String, Float> compTrTypeMap = trTypeTotalMap.get(compName);
-            int col = 1;
+
+            Float profit = new Float(0);
+
             for (String colName : listCategories)
             {
-
-                Cell cell = null;
-                cell = currentRow.createCell(col++);
+                Cell cell = currentRow.createCell(col++);
                 if (compTrTypeMap.get(colName) != null)
+                {
+                    profit += compTrTypeMap.get(colName);
                     cell.setCellValue(compTrTypeMap.get(colName));
+                }
             }
+            Cell cell = currentRow.createCell(col++);
+            cell.setCellValue(profit);
 
         }
         // Create dummy rows
@@ -828,14 +872,15 @@ public class AccountsMainApp
         for (String otherName : listOtherEntities)
         {
             rowNum++;
+            int col = 0;
             XSSFRow currentRow = sheet.createRow(rowNum);
             {
                 Cell cell = null;
-                cell = currentRow.createCell(0);
+                cell = currentRow.createCell(col++);
                 cell.setCellValue(otherName);
             }
             final Map<String, Float> otherTrTypeMap = trTypeTotalMap.get(otherName);
-            int col = 1;
+
             for (String colName : listCategories)
             {
 
@@ -858,6 +903,8 @@ public class AccountsMainApp
         sheet.setColumnWidth(8, 3000);
         sheet.setColumnWidth(9, 3000);
         sheet.setColumnWidth(10, 3000);
+        sheet.setColumnWidth(11, 3000);
+        sheet.setColumnWidth(12, 3000);
     }
 
     private static void createRentalSummarySheet(XSSFWorkbook workBook, Map<String, Float[]> propTable)
@@ -926,8 +973,8 @@ public class AccountsMainApp
     }
 
     private static void exportToExcel(Map<String, Float[]> propTable, final Map<String, ArrayList<TR>> companyTrMap,
-                                      final Map<String, ArrayList<TR>> otherTrMap, String accountName, String file,
-                                      String filter) throws DBException, IOException
+                                      final Map<String, ArrayList<TR>> otherTrMap, String accountName, String file, String filter,
+                                      int year) throws DBException, IOException
     {
         DBIfc dbIfc = DBFactory.createDBIfc();
 
@@ -955,7 +1002,7 @@ public class AccountsMainApp
         CellStyle topAlignCellStyle = workBook.createCellStyle();
         topAlignCellStyle.setVerticalAlignment(CellStyle.VERTICAL_TOP);
         createRentalSummarySheet(workBook, propTable);
-        createCompanySummarySheet(workBook, companyTrMap, otherTrMap);
+        createCompanySummarySheet(workBook, dbIfc, propTable, companyTrMap, otherTrMap);
 
         Map<String, BankAccount> baMap = new TreeMap<String, BankAccount>(dbIfc.getAccounts());
 
@@ -1006,6 +1053,13 @@ public class AccountsMainApp
             int RowNum = 0;
             for (TR tr : trMap.values())
             {
+                final Calendar cal = Calendar.getInstance();
+                cal.setTime(tr.getDate());
+
+                if (cal.get(Calendar.YEAR) != year)
+                {
+                    continue;
+                }
                 if (filter != null)
                 {
                     if (filter.equals(tr.getTrType()))
@@ -1279,7 +1333,7 @@ public class AccountsMainApp
                     }
                 }
             }
-            dbIfc.updateTransactions(trMap, true);
+            dbIfc.updateTransactions(trMap, true, false);
         }
         return dbIfc;
     }
@@ -1377,7 +1431,7 @@ public class AccountsMainApp
             System.out.println("Import check succeeded. Number of entries in input=" + newTrList.size());
             if (commit)
             {
-                int count = dbIfc.updateTransactions(newTrList, true);
+                int count = dbIfc.updateTransactions(newTrList, true, false);
                 System.out.println("Committed transaction count=" + count);
             } else
             {
@@ -1458,6 +1512,7 @@ public class AccountsMainApp
         ALL_OPTS.put("file", Getopt.CONTRNT_S);
         ALL_OPTS.put("dir", Getopt.CONTRNT_S);
         ALL_OPTS.put("commit", Getopt.CONTRNT_NOARG);
+        ALL_OPTS.put("setasis", Getopt.CONTRNT_NOARG);
         ALL_OPTS.put("filter", Getopt.CONTRNT_S);
 
     }
@@ -1737,11 +1792,12 @@ public class AccountsMainApp
                     System.out.println("" + sb);
                 }
                 exportToExcel(propTable, companyTrMap, otherTrMap, argHash.get("accountname"), argHash.get("file"),
-                        argHash.get("filter"));
+                        argHash.get("filter"), new Integer(argHash.get("year")).intValue());
 
             } else if (IMPEXCEL.equalsIgnoreCase(action))
             {
-                importFromExcel(argHash.get("accountname"), argHash.get("file"), argHash.get("commit") != null);
+                importFromExcel(argHash.get("accountname"), argHash.get("file"), argHash.get("commit") != null,
+                        argHash.get("setasis") != null);
 
             } else if (CLASSIFY_EXP.equalsIgnoreCase(action))
             {
@@ -1767,7 +1823,7 @@ public class AccountsMainApp
                     System.out.println("" + sb);
                 }
                 exportToExcel(propTable, companyTrMap, otherTrMap, argHash.get("accountname"), argHash.get("file"),
-                        argHash.get("filter"));
+                        argHash.get("filter"), new Integer(argHash.get("year")).intValue());
 
             } else if (DELETETRS.equalsIgnoreCase(action))
             {

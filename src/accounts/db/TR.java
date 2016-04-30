@@ -533,6 +533,12 @@ public abstract class TR
 
     public void setComment(String comment)
     {
+        if (comment == null)
+        {
+            // this will allow to reimport the original bank statements again and again and any previous classification will not
+            // be overwritten
+            return;
+        }
         this.comment = comment;
     }
 
@@ -554,7 +560,11 @@ public abstract class TR
     public void setProperty(String property)
     {
         if (property == null)
+        {
+            // this will allow to reimport the original bank statements again and again and any previous classification will not
+            // be overwritten
             return;
+        }
         property = property.trim().toLowerCase();
         this.property = property;
     }
@@ -567,7 +577,11 @@ public abstract class TR
     public void setOtherEntity(String otherEntity)
     {
         if (otherEntity == null)
+        {
+            // this will allow to reimport the original bank statements again and again and any previous classification will not
+            // be overwritten
             return;
+        }
         otherEntity = otherEntity.trim().toLowerCase();
         this.otherEntity = otherEntity;
     }

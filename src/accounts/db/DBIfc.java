@@ -39,7 +39,7 @@ public interface DBIfc
 
     TR createCorrespondingTRObj(BankAccount ba) throws DBException;
 
-    int updateTransactions(Map<TRId, TR> trs, boolean checkLocked) throws DBException;
+    int updateTransactions(Map<TRId, TR> trs, boolean checkLocked, boolean setasis) throws DBException;
 
     void updateTransaction(TR tr) throws DBException;
 

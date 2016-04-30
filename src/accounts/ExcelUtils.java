@@ -31,8 +31,10 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.poi.ss.usermodel.Row;
@@ -43,6 +45,7 @@ import accounts.db.BankAccount;
 import accounts.db.Company;
 import accounts.db.DBException;
 import accounts.db.DBFactory;
+import accounts.db.DBIfc;
 import accounts.db.RealProperty;
 import accounts.db.TR;
 import accounts.db.TRId;
@@ -197,8 +200,8 @@ public class ExcelUtils
         return listFiles;
     }
 
-    public Map<String, Map<TRId, TR>> importCheck(Map<String, Map<TRId, TR>> excelTrMap, Map<String, RealProperty> propMap,
-                                                  Map<String, Company> compMap) throws AccountExp
+    public Map<String, Map<TRId, TR>> importCheck(Map<String, Map<TRId, TR>> excelTrMap, final DBIfc dbIfc) throws AccountExp,
+                                                                                                            DBException
     {
         Map<String, Map<TRId, TR>> importMap = new TreeMap<>();
         for (String bankAccount : excelTrMap.keySet())
@@ -226,30 +229,35 @@ public class ExcelUtils
                 if (!excelTrList.get(trId).equals(dbTrList.get(trId)))
                 {
                     TR trToImport = excelTrList.get(trId);
+
+                    Set<String> setOfPorpOrComp = new LinkedHashSet<>();
+
+                    // Make sure the "Property or Company" value is set properly
+
+                    Map<String, RealProperty> propMap = dbIfc.getProperties();
+                    Map<String, Company> compMap = dbIfc.getCompanies();
                     if (propMap != null)
                     {
-                        if (trToImport.getProperty() != null && !trToImport.getProperty().isEmpty())
-                        {
-                            if (!propMap.containsKey(trToImport.getProperty()))
-                            {
-                                if (compMap == null)
-                                {
-                                    throw new AccountExp(AccountExp.NOTPRESENT,
-                                            "Unknown property or company=\"" + trToImport.getProperty() + "\" in " + bankAccount
-                                                    + "\nAllowed list=" + propMap.keySet());
-                                } else
-                                {
-                                    if (!compMap.containsKey(trToImport.getProperty()))
-                                    {
-                                        throw new AccountExp(AccountExp.NOTPRESENT,
-                                                "Unknown property or company=\"" + trToImport.getProperty() + "\" in "
-                                                        + bankAccount + "\nAllowed list=" + propMap.keySet() + compMap.keySet());
-                                    }
-                                }
-                            }
-                        }
-
+                        setOfPorpOrComp.addAll(propMap.keySet());
                     }
+                    if (compMap != null)
+                    {
+                        setOfPorpOrComp.addAll(compMap.keySet());
+                    }
+                    if (dbIfc.getGroupsMap() != null)
+                    {
+                        setOfPorpOrComp.addAll(dbIfc.getGroupsMap().keySet());
+                    }
+                    if (trToImport.getProperty() != null && !trToImport.getProperty().isEmpty())
+                    {
+                        if (!setOfPorpOrComp.contains(trToImport.getProperty()))
+                        {
+                            throw new AccountExp(AccountExp.NOTPRESENT, "Unknown property or company=\""
+                                    + trToImport.getProperty() + "\" in " + bankAccount + "\nAllowed list=" + setOfPorpOrComp);
+
+                        }
+                    }
+
                     if (trToImport.getTaxCategory() != null && !trToImport.getTaxCategory().isEmpty())
                     {
                         if (!AccountsUtil.inst().getAllowedTaxCategories().containsKey(trToImport.getTaxCategory()))
@@ -303,7 +311,7 @@ public class ExcelUtils
         Map<String, Map<TRId, TR>> baMap = getBankTransactionMapFromCsv(args[0]);
         final ExcelUtils howto = new ExcelUtils(baMap);
         Map<String, Map<TRId, TR>> excelTrMap = howto.processAllSheets(args[1]);
-        howto.importCheck(excelTrMap, null, null);
+        howto.importCheck(excelTrMap, null);
         // howto.processAllSheets(args[0]);
     }
 }
