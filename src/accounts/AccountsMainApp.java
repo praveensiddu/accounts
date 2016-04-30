@@ -1205,34 +1205,47 @@ public class AccountsMainApp
             {
                 for (final RuleRecord rr : arr)
                 {
+                    String propertyInRR = rr.getProperty();
+                    String otherEntityInRR = rr.getProperty();
+                    String taxCategoryInRR = rr.getProperty();
+                    String trTypeInRR = rr.getProperty();
+                    if (propertyInRR == null)
+                        propertyInRR = "";
+                    if (otherEntityInRR == null)
+                        otherEntityInRR = "";
+                    if (taxCategoryInRR == null)
+                        taxCategoryInRR = "";
+                    if (trTypeInRR == null)
+                        trTypeInRR = "";
+
                     if (rr.getDescContains() != null)
                     {
                         if (tr.getDescription().contains(rr.getDescContains()))
                         {
-                            tr.setProperty(rr.getProperty());
-                            tr.setOtherEntity(rr.getOtherEntity());
-                            tr.setTaxCategory(rr.getTaxCategory());
-                            tr.setTrType(rr.getTrType());
+                            tr.setProperty(propertyInRR);
+                            tr.setOtherEntity(otherEntityInRR);
+                            tr.setTaxCategory(taxCategoryInRR);
+                            tr.setTrType(trTypeInRR);
                             break;
                         }
                     } else if (rr.getDescStartsWith() != null)
                     {
                         if (tr.getDescription().startsWith(rr.getDescStartsWith()))
                         {
-                            tr.setProperty(rr.getProperty());
-                            tr.setOtherEntity(rr.getOtherEntity());
-                            tr.setTaxCategory(rr.getTaxCategory());
-                            tr.setTrType(rr.getTrType());
+                            tr.setProperty(propertyInRR);
+                            tr.setOtherEntity(otherEntityInRR);
+                            tr.setTaxCategory(taxCategoryInRR);
+                            tr.setTrType(trTypeInRR);
                             break;
                         }
                     } else if (rr.getDebitEquals() != 0)
                     {
                         if (tr.getDebit() == rr.getDebitEquals())
                         {
-                            tr.setProperty(rr.getProperty());
-                            tr.setOtherEntity(rr.getOtherEntity());
-                            tr.setTaxCategory(rr.getTaxCategory());
-                            tr.setTrType(rr.getTrType());
+                            tr.setProperty(propertyInRR);
+                            tr.setOtherEntity(otherEntityInRR);
+                            tr.setTaxCategory(taxCategoryInRR);
+                            tr.setTrType(trTypeInRR);
                             break;
                         }
                     }
@@ -1257,22 +1270,37 @@ public class AccountsMainApp
             {
                 for (final RuleRecord rr : arr)
                 {
+                    String propertyInRR = rr.getProperty();
+                    String otherEntityInRR = rr.getProperty();
+                    String taxCategoryInRR = rr.getProperty();
+                    String trTypeInRR = rr.getProperty();
+                    if (propertyInRR == null)
+                        propertyInRR = "";
+                    if (otherEntityInRR == null)
+                        otherEntityInRR = "";
+                    if (taxCategoryInRR == null)
+                        taxCategoryInRR = "";
+                    if (trTypeInRR == null)
+                        trTypeInRR = "";
+
                     if (rr.getDescContains() != null)
                     {
                         if (tr.getDescription().contains(rr.getDescContains()))
                         {
-                            tr.setProperty(rr.getProperty());
-                            tr.setTaxCategory(rr.getTaxCategory());
-                            tr.setTrType(rr.getTrType());
+                            tr.setProperty(propertyInRR);
+                            tr.setOtherEntity(otherEntityInRR);
+                            tr.setTaxCategory(taxCategoryInRR);
+                            tr.setTrType(trTypeInRR);
                             break;
                         }
                     } else if (rr.getDescStartsWith() != null)
                     {
                         if (tr.getDescription().startsWith(rr.getDescStartsWith()))
                         {
-                            tr.setProperty(rr.getProperty());
-                            tr.setTaxCategory(rr.getTaxCategory());
-                            tr.setTrType(rr.getTrType());
+                            tr.setProperty(propertyInRR);
+                            tr.setOtherEntity(otherEntityInRR);
+                            tr.setTaxCategory(taxCategoryInRR);
+                            tr.setTrType(trTypeInRR);
                             break;
                         }
                     }

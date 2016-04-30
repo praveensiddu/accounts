@@ -1,8 +1,8 @@
 
 strategy for 1098
-Add summary of compnay report to excel
 
 delete transaction for whole year
+operations like delete should ask confirmation to avoid disaster
 
 remove unwanted usage
 

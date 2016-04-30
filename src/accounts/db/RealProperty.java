@@ -91,7 +91,7 @@ public class RealProperty
     public String toString()
     {
         return "Prop=" + propertyName + ", land=" + landValue + ", cost=" + cost + ", renovation=" + renovation + ", pDate="
-                + purchaseDate;
+                + purchaseDate + ", MgmtComp=" + propMgmtCompany;
     }
 
     public static void main(String[] args)
