@@ -135,7 +135,7 @@ public class AccountsMainApp
             addToPropertyMap(year, trMap, groupsMap, propTrMap, grpTrMap, companyTrMap, otherTrMap);
         }
 
-        StringBuffer sb = reportFromPropMap(propTrMap, grpTrMap, dbIfc, groupsMap, propTable);
+        StringBuffer sb = reportFromPropMap(propTrMap, grpTrMap, dbIfc, groupsMap, propTable, year);
         sb.append(reportFromCompanyMap(companyTrMap));
         sb.append(reportFromOtherMap(otherTrMap));
 
@@ -315,10 +315,11 @@ public class AccountsMainApp
 
     public static final float DEFAULT_RENT_DIST_PERCENTAGE = 94;
 
+    @SuppressWarnings("deprecation")
     private static StringBuffer reportFromPropMap(final Map<String, ArrayList<TR>> propTrMap,
                                                   final Map<String, ArrayList<TR>> groupTrMap, final DBIfc dbIfc,
-                                                  final Map<String, IGroup> groupsMap,
-                                                  Map<String, Float[]> propTable) throws DBException
+                                                  final Map<String, IGroup> groupsMap, Map<String, Float[]> propTable,
+                                                  int year) throws DBException
     {
 
         final Map<String, RealProperty> propertyMap = dbIfc.getProperties();
@@ -419,6 +420,22 @@ public class AccountsMainApp
             {
                 int costPlusReno = rp.getCost() + rp.getRenovation();
                 double depreciation = (costPlusReno * 3.64 / 100);
+
+                final Calendar cal = Calendar.getInstance();
+
+                if (rp.getPurchaseDate() != null)
+                {
+                    cal.setTime(rp.getPurchaseDate());
+
+                    if (cal.get(Calendar.YEAR) == year)
+                    {
+                        // Purchased the same year as being reported.
+                        int dayOfYear = cal.get(Calendar.DAY_OF_YEAR);
+                        int noOfDaysOwned = 365 - dayOfYear;
+                        depreciation = depreciation * noOfDaysOwned / 365;
+                    }
+
+                }
                 double value = (-(depreciation / ownerCount));
                 sb.append("    18 depreciation" + "=" + value + "\n");
                 totalExpense += value;
@@ -482,7 +499,7 @@ public class AccountsMainApp
         addToPropertyMap(year, trMap, dummyGrpMap, propTrMap, grpTrMap, companyTrMap, otherTrMap);
 
         Map<String, Float[]> propTable = new TreeMap<String, Float[]>();
-        StringBuffer sb = reportFromPropMap(propTrMap, grpTrMap, null, null, propTable);
+        StringBuffer sb = reportFromPropMap(propTrMap, grpTrMap, null, null, propTable, year);
         sb.append(reportFromCompanyMap(companyTrMap));
         sb.append(reportFromOtherMap(otherTrMap));
 

@@ -35,12 +35,19 @@ Commands used
 
 -A exp2excel 
 
--A classifyindb -taxconfig D:\temp\cpa\User1\Praveen_TaxConfig.txt  -year 2015
+-A classify_exp -taxconfig D:\temp\cpa\User1\Praveen_TaxConfig.txt  -year 2015
 -A exp2excel -accountname praveen_dcu_visa
 -A impexcel -accountname praveen_dcu_visa
 
 
 -A import2db -bankstatement D:\temp\cpa\2015_bank_statements_praveen\weepingwillow_wellsfargo_2015.csv -accountname 4085weepingwillow_wellsfargo
 
--A import2db -bankstatement D:\temp\cpa\2015_bank_statements_praveen\paradise_dcu_2015.csv -accountname 
+-A import2db -bankstatement D:\temp\cpa\2015_bank_statements_praveen\paradise_dcu_2015.csv -accountname paradise_dcu
+-A import2db -bankstatement D:\temp\cpa\2015_bank_statements_praveen\paradise_wellsfargo_2015.csv -accountname paradise_wellsfargo
+
+
+
+-A import2db -bankstatement D:\temp\cpa\2015_bank_statements_praveen\amex_personal_2015.csv -accountname amex_praveen
+-A import2db -bankstatement D:\temp\cpa\2015_bank_statements_praveen\amex_business_yearend_2015.csv -accountname amex_praveen_business
+
 
