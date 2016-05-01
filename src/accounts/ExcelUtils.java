@@ -62,8 +62,8 @@ public class ExcelUtils
         this.baMap = baMap;
     }
 
-    public Map<String, Map<TRId, TR>> processAllSheets(String filename, Map<String, BankAccount> baMap) throws IOException,
-                                                                                                        DBException
+    public Map<String, Map<TRId, TR>> processAllSheets(String filename, Map<String, BankAccount> baMap,
+                                                       String accountName) throws IOException, DBException
     {
         Map<String, Map<TRId, TR>> excelTrMap = new TreeMap<>();
         FileInputStream file = new FileInputStream(new File(filename));
@@ -75,6 +75,10 @@ public class ExcelUtils
             XSSFSheet sheet = workbook.getSheetAt(i);
             String sheetName = workbook.getSheetName(i);
             if ("RentalSummary".equalsIgnoreCase(sheetName) || "CompanySummary".equalsIgnoreCase(sheetName))
+            {
+                continue;
+            }
+            if (accountName != null && !accountName.equalsIgnoreCase(sheetName))
             {
                 continue;
             }
@@ -102,6 +106,8 @@ public class ExcelUtils
                 tr.setTaxCategory(row.getCell(5).getStringCellValue());
                 tr.setProperty(row.getCell(6).getStringCellValue());
                 tr.setOtherEntity(row.getCell(7).getStringCellValue());
+                String locked = row.getCell(8).getStringCellValue();
+                tr.setLocked("YES".equalsIgnoreCase(locked));
                 tr.setTrId();
                 mapTr.put(tr.getTrId(), tr);
 

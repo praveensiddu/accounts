@@ -496,6 +496,7 @@ public abstract class TR
         sb.append(", " + taxCategory);
         sb.append(", " + property);
         sb.append(", " + otherEntity);
+        sb.append(", " + locked);
 
         return sb.toString();
     }

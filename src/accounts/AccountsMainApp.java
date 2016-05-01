@@ -628,7 +628,7 @@ public class AccountsMainApp
         }
 
         ExcelUtils eu = new ExcelUtils(baMap);
-        Map<String, Map<TRId, TR>> excelTrMap = eu.processAllSheets(excelFile, dbIfc.getAccounts());
+        Map<String, Map<TRId, TR>> excelTrMap = eu.processAllSheets(excelFile, dbIfc.getAccounts(), accountName);
         Map<String, Map<TRId, TR>> changedBaMap = eu.importCheck(excelTrMap, dbIfc);
 
         if (changedBaMap.size() == 0)
@@ -753,7 +753,8 @@ public class AccountsMainApp
         dbi.deleteTransactions(ba.getTrTableId());
     }
 
-    public static final String COMP_CATEGORY_INCOME = "1. Income";
+    public static final String C_CATEGORY_INCOME   = "1. Income";
+    public static final String C_CATEGORY_RENTDIST = "RentDistribution";
 
     private static void createCompanySummarySheet(XSSFWorkbook workBook, DBIfc dbIfc, Map<String, Float[]> propTable,
                                                   final Map<String, ArrayList<TR>> companyTrMap,
@@ -765,7 +766,7 @@ public class AccountsMainApp
 
         Set<String> setOfCategories = new LinkedHashSet<>();
 
-        setOfCategories.add(COMP_CATEGORY_INCOME); // Make it the first column
+        setOfCategories.add(C_CATEGORY_INCOME); // Make it the first column
 
         for (final String compName : companyTrMap.keySet())
         {
@@ -778,9 +779,10 @@ public class AccountsMainApp
         {
             // Find the company which manages it
             String mgmtComp = "Unknown";
+            RealProperty rp = null;
             if (dbIfc.getProperties() != null && dbIfc.getProperties().containsKey(propName))
             {
-                RealProperty rp = dbIfc.getProperties().get(propName);
+                rp = dbIfc.getProperties().get(propName);
                 if (rp.getPropMgmtCompany() != null)
                 {
                     mgmtComp = rp.getPropMgmtCompany();
@@ -793,15 +795,20 @@ public class AccountsMainApp
                 trTypeMap = new HashMap<String, Float>();
                 trTypeTotalMap.put(mgmtComp, trTypeMap);
             }
-            Float income = trTypeMap.get(COMP_CATEGORY_INCOME);
-            if (income == null)
+            int ownerCount = 1;
+            if (rp != null)
             {
-                income = propTable.get(propName)[scheduleEMap.get(RENT)];
+                ownerCount = rp.getOwnerCount();
+            }
+            Float distribution = trTypeMap.get(C_CATEGORY_RENTDIST);
+            if (distribution == null)
+            {
+                distribution = -(propTable.get(propName)[scheduleEMap.get(RENT)] * ownerCount);
             } else
             {
-                income += propTable.get(propName)[scheduleEMap.get(RENT)];
+                distribution += -(propTable.get(propName)[scheduleEMap.get(RENT)] * ownerCount);
             }
-            trTypeMap.put(COMP_CATEGORY_INCOME, income);
+            trTypeMap.put(C_CATEGORY_RENTDIST, distribution);
 
         }
         for (final String name : otherTrMap.keySet())
@@ -810,6 +817,8 @@ public class AccountsMainApp
             trTypeTotalMap.put(name, trTypeMap);
             setOfCategories.addAll(trTypeMap.keySet());
         }
+
+        setOfCategories.add(C_CATEGORY_RENTDIST);
         List<String> listCompanies = new ArrayList<String>(companyTrMap.keySet());
         Collections.sort(listCompanies);
 
@@ -832,10 +841,7 @@ public class AccountsMainApp
                 Cell cell = currentRow.createCell(col++);
                 cell.setCellValue(colName);
             }
-            {// Profit column is the last
-                Cell cell = currentRow.createCell(col++);
-                cell.setCellValue("RentDistribution");
-            }
+
             {// Profit column is the last
                 Cell cell = currentRow.createCell(col++);
                 cell.setCellValue("Profit");
@@ -854,6 +860,20 @@ public class AccountsMainApp
             }
             final Map<String, Float> compTrTypeMap = trTypeTotalMap.get(compName);
 
+            float distPercent = DEFAULT_RENT_DIST_PERCENTAGE;
+            if (dbIfc.getCompanies() != null && dbIfc.getCompanies().containsKey(compName))
+            {
+                Company compObj = dbIfc.getCompanies().get(compName);
+                distPercent = (100 - compObj.getRentPercentage());
+            }
+
+            Float income = new Float(0);
+            if (compTrTypeMap != null && compTrTypeMap.containsKey(C_CATEGORY_RENTDIST))
+            {
+                income = -(compTrTypeMap.get(C_CATEGORY_RENTDIST) * 100 / distPercent);
+                compTrTypeMap.put(C_CATEGORY_INCOME, income);
+            }
+
             Float profit = new Float(0);
 
             for (String colName : listCategories)
@@ -865,21 +885,7 @@ public class AccountsMainApp
                     cell.setCellValue(compTrTypeMap.get(colName));
                 }
             }
-            Float income = compTrTypeMap.get(COMP_CATEGORY_INCOME);
             Cell cell = currentRow.createCell(col++);
-            if (income != null)
-            {
-                float distPercent = DEFAULT_RENT_DIST_PERCENTAGE;
-                if (dbIfc.getCompanies() != null && dbIfc.getCompanies().containsKey(compName))
-                {
-                    Company compObj = dbIfc.getCompanies().get(compName);
-                    distPercent = (100 - compObj.getRentPercentage());
-                }
-                float dist = -(income * distPercent / 100);
-                cell.setCellValue(dist);
-                profit += dist;
-            }
-            cell = currentRow.createCell(col++);
             cell.setCellValue(profit);
 
         }
@@ -1493,7 +1499,7 @@ public class AccountsMainApp
         System.out.println("        Recommended to keep all statements under $ACCOUNTSDB/bank_stmts directory\n");
         System.out.println("    -A classifyindb -taxconfig <f> -year <yyyy>\n");
         System.out.println("    -A exp2excel -year <yyyy> [-accountname <n>] [-file <f.xlsx>] [-filter \"tr types\"]\n");
-        System.out.println("    -A impexcel [-commit] [-accountname <n>] [-file <f.xlsx>]\n");
+        System.out.println("    -A impexcel [-commit] [-setasis] [-accountname <n>] [-file <f.xlsx>]\n");
         System.out.println("    -A classify_exp -taxconfig <f> -year <yyyy>\n");
 
         System.exit(1);

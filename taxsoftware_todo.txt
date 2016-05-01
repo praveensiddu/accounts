@@ -1,11 +1,14 @@
 Add realestate 1099
+1098 from pennymac
+strategy for 1098
+koman depreciation calcuation
 
 option to ignore lock feature
 classify export has to be run twice
 export excel should export only that year
 
 
-strategy for 1098
+
 
 delete transaction for whole year
 operations like delete should ask confirmation to avoid disaster
