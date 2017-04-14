@@ -16,13 +16,13 @@ import accounts.db.TRId;
 
 public class BankStatement
 {
-    private BankStatementFormat bc          = null;
-    private BankAccount         bankAccount = null;
-    private DBIfc               dbIfc;
+    private BankStatementFormat   bc            = null;
+    private BankAccount           bankAccount   = null;
+    private DBIfc                 dbIfc;
 
-    private Map<TRId, TR> trs = new HashMap<TRId, TR>();
+    private Map<TRId, TR>         trs           = new HashMap<>();
 
-    private final Map<String, TR> mkUniqDescMap = new HashMap<String, TR>();
+    private final Map<String, TR> mkUniqDescMap = new HashMap<>();
 
     public BankStatement(final String filename, String accountName, final String bankStFormat)
             throws IOException, DBException, ParseException
@@ -66,6 +66,7 @@ public class BankStatement
                 {
                     continue;
                 }
+
                 TR tr = dbIfc.createCorrespondingTRObj(bankAccount);
 
                 tr.init(line, bc);
@@ -114,6 +115,11 @@ public class BankStatement
                 return true;
             }
         }
+        String isEmptyLine = line.replaceAll(",", "");
+        isEmptyLine = isEmptyLine.trim();
+        if (isEmptyLine.isEmpty())
+            return true;
+
         return false;
     }
 
@@ -183,7 +189,7 @@ public class BankStatement
     }
 
     public static final String              PARSE    = "parse";
-    public static final Map<String, String> ALL_OPTS = new HashMap<String, String>();
+    public static final Map<String, String> ALL_OPTS = new HashMap<>();
 
     static
     {

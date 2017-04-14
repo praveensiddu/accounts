@@ -41,15 +41,15 @@ public abstract class TR
     }
 
     @Id
-    @AttributeOverrides({ @AttributeOverride(name = "date", column = @Column(name = "DATE") ),
-            @AttributeOverride(name = "description", column = @Column(name = "DESCRIPTION") ),
-            @AttributeOverride(name = "debit", column = @Column(name = "DEBIT") ) })
+    @AttributeOverrides({ @AttributeOverride(name = "date", column = @Column(name = "DATE")),
+            @AttributeOverride(name = "description", column = @Column(name = "DESCRIPTION")),
+            @AttributeOverride(name = "debit", column = @Column(name = "DEBIT")) })
     @Temporal(TemporalType.DATE)
-    private Date date;
+    private Date    date;
 
     @Id
     @Column(length = 200)
-    private String description;
+    private String  description;
 
     @Id
     private float   debit;
@@ -58,13 +58,13 @@ public abstract class TR
     private boolean locked;
 
     @Column(length = 20)
-    private String trType;
+    private String  trType;
     @Column(length = 25)
-    private String taxCategory;
+    private String  taxCategory;
     @Column(length = 50)
-    private String property;
+    private String  property;
     @Column(length = 50)
-    private String otherEntity;
+    private String  otherEntity;
 
     public void copyNonPrimaryFields(TR tr)
     {
@@ -210,7 +210,7 @@ public abstract class TR
 
     private static String[] approxCsvCorrection(final String[] fields)
     {
-        final ArrayList<String> list = new ArrayList<String>();
+        final ArrayList<String> list = new ArrayList<>();
         for (int i = 0; i < fields.length;)
         {
             if (fields[i].startsWith("\""))
@@ -264,6 +264,7 @@ public abstract class TR
     private static float getFloatVaue(String floatStr)
     {
         boolean negative = false;
+        floatStr = floatStr.replaceAll(",", "");
 
         if (floatStr.startsWith("("))
         {

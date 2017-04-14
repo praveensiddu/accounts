@@ -46,7 +46,7 @@ import accounts.exp.AccountExp;
 
 public class AccountsMainApp
 {
-    private BankAccount bankAccount = null;
+    private BankAccount                      bankAccount      = null;
 
     public static final String               RENT             = "rent";
     public static final String               COMMISSIONS      = "commissions";
@@ -66,7 +66,7 @@ public class AccountsMainApp
     public static final String[]             scheduleEAry     = { null, null, null, RENT, null, null, null, null, COMMISSIONS,
             INSURANCE, PROFFEES, null, MORTGAGEINTEREST, null, REPAIRS, null, TAX, UTILITIES, DEPRECIATION, HOA, OTHER };
 
-    public static final Map<String, String> TRTYPE_MAP = new HashMap<>();
+    public static final Map<String, String>  TRTYPE_MAP       = new HashMap<>();
 
     static
     {
@@ -86,7 +86,7 @@ public class AccountsMainApp
 
     static
     {
-        scheduleEMap = new HashMap<String, Integer>();
+        scheduleEMap = new HashMap<>();
         scheduleEMap.put(RENT, 3);
         scheduleEMap.put(COMMISSIONS, 8);
         scheduleEMap.put(INSURANCE, 9);
@@ -103,7 +103,7 @@ public class AccountsMainApp
 
     private static Map<String, Float> trTypeTotal(final ArrayList<TR> art)
     {
-        final Map<String, Float> map = new HashMap<String, Float>();
+        final Map<String, Float> map = new HashMap<>();
         for (final TR tr : art)
         {
             if (!map.containsKey(tr.getTrType()))
@@ -122,8 +122,8 @@ public class AccountsMainApp
                                        Map<String, ArrayList<TR>> companyTrMap,
                                        Map<String, ArrayList<TR>> otherTrMap) throws DBException
     {
-        final Map<String, ArrayList<TR>> propTrMap = new HashMap<String, ArrayList<TR>>();
-        final Map<String, ArrayList<TR>> grpTrMap = new HashMap<String, ArrayList<TR>>();
+        final Map<String, ArrayList<TR>> propTrMap = new HashMap<>();
+        final Map<String, ArrayList<TR>> grpTrMap = new HashMap<>();
         Map<String, BankAccount> acctMap = dbIfc.getAccounts();
         Map<String, IGroup> groupsMap = dbIfc.getGroupsMap();
 
@@ -176,14 +176,14 @@ public class AccountsMainApp
                             arrTr.add(tr);
                         } else
                         {
-                            final ArrayList<TR> arrTr = new ArrayList<TR>();
+                            final ArrayList<TR> arrTr = new ArrayList<>();
                             arrTr.add(tr);
                             grpTrMap.put(tr.getProperty(), arrTr);
                             continue;
                         }
                     } else
                     {
-                        final ArrayList<TR> arrTr = new ArrayList<TR>();
+                        final ArrayList<TR> arrTr = new ArrayList<>();
                         arrTr.add(tr);
                         propTrMap.put(tr.getProperty(), arrTr);
                         continue;
@@ -215,7 +215,7 @@ public class AccountsMainApp
                     arrTr.add(tr);
                 } else
                 {
-                    final ArrayList<TR> arrTr = new ArrayList<TR>();
+                    final ArrayList<TR> arrTr = new ArrayList<>();
                     arrTr.add(tr);
                     companyTrMap.put(compName, arrTr);
                     continue;
@@ -229,7 +229,7 @@ public class AccountsMainApp
                     arrTr.add(tr);
                 } else
                 {
-                    final ArrayList<TR> arrTr = new ArrayList<TR>();
+                    final ArrayList<TR> arrTr = new ArrayList<>();
                     arrTr.add(tr);
                     companyTrMap.put("realestate", arrTr);
                     continue;
@@ -244,7 +244,7 @@ public class AccountsMainApp
                         arrTr.add(tr);
                     } else
                     {
-                        final ArrayList<TR> arrTr = new ArrayList<TR>();
+                        final ArrayList<TR> arrTr = new ArrayList<>();
                         arrTr.add(tr);
                         otherTrMap.put(tr.getOtherEntity(), arrTr);
                         continue;
@@ -258,14 +258,14 @@ public class AccountsMainApp
     private static StringBuffer reportFromOtherMap(final Map<String, ArrayList<TR>> otherTrMap)
     {
 
-        Map<String, Map<String, Float>> trTypeTotalMap = new HashMap<String, Map<String, Float>>();
+        Map<String, Map<String, Float>> trTypeTotalMap = new HashMap<>();
 
         for (final String name : otherTrMap.keySet())
         {
             final Map<String, Float> trTypeMap = trTypeTotal(otherTrMap.get(name));
             trTypeTotalMap.put(name, trTypeMap);
         }
-        List<String> listCompanies = new ArrayList<String>(otherTrMap.keySet());
+        List<String> listCompanies = new ArrayList<>(otherTrMap.keySet());
         Collections.sort(listCompanies);
         // For each company first calculate the totals in each category and
         // then prepare the report
@@ -274,7 +274,7 @@ public class AccountsMainApp
         {
             sb.append("\nReport for other entity=" + name + "\n");
             final Map<String, Float> trTypeMap = trTypeTotalMap.get(name);
-            final Map<String, Float> trTypeMapSorted = new TreeMap<String, Float>(trTypeMap);
+            final Map<String, Float> trTypeMapSorted = new TreeMap<>(trTypeMap);
             for (String trType : trTypeMapSorted.keySet())
             {
                 sb.append("    " + trType + "=" + trTypeMapSorted.get(trType) + "\n");
@@ -287,14 +287,14 @@ public class AccountsMainApp
     private static StringBuffer reportFromCompanyMap(final Map<String, ArrayList<TR>> companyTrMap)
     {
 
-        Map<String, Map<String, Float>> trTypeTotalMap = new HashMap<String, Map<String, Float>>();
+        Map<String, Map<String, Float>> trTypeTotalMap = new HashMap<>();
 
         for (final String name : companyTrMap.keySet())
         {
             final Map<String, Float> trTypeMap = trTypeTotal(companyTrMap.get(name));
             trTypeTotalMap.put(name, trTypeMap);
         }
-        List<String> listCompanies = new ArrayList<String>(companyTrMap.keySet());
+        List<String> listCompanies = new ArrayList<>(companyTrMap.keySet());
         Collections.sort(listCompanies);
         // For each company first calculate the totals in each category and
         // then prepare the report
@@ -303,7 +303,7 @@ public class AccountsMainApp
         {
             sb.append("\nReport for company=" + name + "\n");
             final Map<String, Float> trTypeMap = trTypeTotalMap.get(name);
-            final Map<String, Float> trTypeMapSorted = new TreeMap<String, Float>(trTypeMap);
+            final Map<String, Float> trTypeMapSorted = new TreeMap<>(trTypeMap);
             for (String trType : trTypeMapSorted.keySet())
             {
                 sb.append("    " + trType + "=" + trTypeMapSorted.get(trType) + "\n");
@@ -323,7 +323,7 @@ public class AccountsMainApp
     {
 
         final Map<String, RealProperty> propertyMap = dbIfc.getProperties();
-        Map<String, Map<String, Float>> propTrTypeTotalMap = new HashMap<String, Map<String, Float>>();
+        Map<String, Map<String, Float>> propTrTypeTotalMap = new HashMap<>();
 
         for (final String propName : propTrMap.keySet())
         {
@@ -349,7 +349,7 @@ public class AccountsMainApp
                 Map<String, Float> trTypeMap = propTrTypeTotalMap.get(propName);
                 if (trTypeMap == null)
                 {
-                    trTypeMap = new HashMap<String, Float>();
+                    trTypeMap = new HashMap<>();
                     propTrTypeTotalMap.put(propName, trTypeMap);
                 }
                 for (String category : grpTrTypeMap.keySet())
@@ -363,7 +363,7 @@ public class AccountsMainApp
                 }
             }
         }
-        List<String> listProps = new ArrayList<String>(propTrMap.keySet());
+        List<String> listProps = new ArrayList<>(propTrMap.keySet());
         Collections.sort(listProps);
         // For each property first calculate the totals in each category and
         // then preprare the report
@@ -380,6 +380,10 @@ public class AccountsMainApp
             {
                 rp = propertyMap.get(propName);
                 ownerCount = rp.getOwnerCount();
+            } else
+            {
+                System.out.println("Unable to find property in datatabse. Propname=" + propName + "\nMay not be a real property");
+                continue;
             }
             float rentPercentage = DEFAULT_RENT_DIST_PERCENTAGE;
             if (rp.getPropMgmtCompany() != null)
@@ -491,14 +495,14 @@ public class AccountsMainApp
 
     private static StringBuffer report(final int year, final Map<TRId, TR> trMap) throws DBException
     {
-        final Map<String, ArrayList<TR>> propTrMap = new HashMap<String, ArrayList<TR>>();
-        final Map<String, ArrayList<TR>> grpTrMap = new HashMap<String, ArrayList<TR>>();
-        final Map<String, ArrayList<TR>> companyTrMap = new HashMap<String, ArrayList<TR>>();
-        final Map<String, ArrayList<TR>> otherTrMap = new HashMap<String, ArrayList<TR>>();
-        Map<String, IGroup> dummyGrpMap = new HashMap<String, IGroup>();
+        final Map<String, ArrayList<TR>> propTrMap = new HashMap<>();
+        final Map<String, ArrayList<TR>> grpTrMap = new HashMap<>();
+        final Map<String, ArrayList<TR>> companyTrMap = new HashMap<>();
+        final Map<String, ArrayList<TR>> otherTrMap = new HashMap<>();
+        Map<String, IGroup> dummyGrpMap = new HashMap<>();
         addToPropertyMap(year, trMap, dummyGrpMap, propTrMap, grpTrMap, companyTrMap, otherTrMap);
 
-        Map<String, Float[]> propTable = new TreeMap<String, Float[]>();
+        Map<String, Float[]> propTable = new TreeMap<>();
         StringBuffer sb = reportFromPropMap(propTrMap, grpTrMap, null, null, propTable, year);
         sb.append(reportFromCompanyMap(companyTrMap));
         sb.append(reportFromOtherMap(otherTrMap));
@@ -514,7 +518,7 @@ public class AccountsMainApp
         final BufferedReader br = new BufferedReader(fr);
         try
         {
-            Map<TRId, TR> trs = new HashMap<TRId, TR>();
+            Map<TRId, TR> trs = new HashMap<>();
             for (String line; (line = br.readLine()) != null;)
             {
                 line = line.toLowerCase().trim();
@@ -598,7 +602,7 @@ public class AccountsMainApp
 
     }
 
-    private static void importFromExcel(String accountName, String file, boolean commit,
+    private static void importFromExcel(String accountName, String file, int year, boolean commit,
                                         boolean setasis) throws DBException, IOException, ParseException, AccountExp
     {
         DBIfc dbIfc = DBFactory.createDBIfc();
@@ -634,7 +638,7 @@ public class AccountsMainApp
             {
                 dirFile.mkdir();
             }
-            excelFile = dir + File.separator + "export_allaccounts.xlsx";
+            excelFile = dir + File.separator + "export_allaccounts_" + year + ".xlsx";
         } else
         {
             excelFile = file;
@@ -643,6 +647,7 @@ public class AccountsMainApp
                 excelFile += ".xlsx";
             }
         }
+        System.out.println("Importing file=" + excelFile);
 
         ExcelUtils eu = new ExcelUtils(baMap);
         Map<String, Map<TRId, TR>> excelTrMap = eu.processAllSheets(excelFile, dbIfc.getAccounts(), accountName);
@@ -697,7 +702,7 @@ public class AccountsMainApp
     {
         DBIfc dbIfc = DBFactory.createDBIfc();
 
-        Map<String, RealProperty> map = new TreeMap<String, RealProperty>(dbIfc.getProperties());
+        Map<String, RealProperty> map = new TreeMap<>(dbIfc.getProperties());
         Map<String, IGroup> gMap = dbIfc.getGroupsMap();
         for (String gName : gMap.keySet())
         {
@@ -726,7 +731,7 @@ public class AccountsMainApp
 
     private static DataValidation getTaxCategoryCheckBoxValidation(DataValidationHelper validationHelper, int rows)
     {
-        Map<String, String> map = new TreeMap<String, String>(AccountsUtil.inst().getAllowedTaxCategories());
+        Map<String, String> map = new TreeMap<>(AccountsUtil.inst().getAllowedTaxCategories());
         String[] allowedTaxCategoryAry = map.keySet().toArray(new String[0]);
         DataValidationConstraint taxCategoryConstraint = validationHelper.createExplicitListConstraint(allowedTaxCategoryAry);
 
@@ -745,7 +750,7 @@ public class AccountsMainApp
 
     private static DataValidation getTrTypeCheckBoxValidation(DataValidationHelper validationHelper, int rows)
     {
-        Map<String, String> map = new TreeMap<String, String>(AccountsUtil.inst().getAllowedTrTypes());
+        Map<String, String> map = new TreeMap<>(AccountsUtil.inst().getAllowedTrTypes());
         String[] allowedTrTypesAry = map.keySet().toArray(new String[0]);
         DataValidationConstraint trTypeConstraint = validationHelper.createExplicitListConstraint(allowedTrTypesAry);
 
@@ -770,8 +775,56 @@ public class AccountsMainApp
         dbi.deleteTransactions(ba.getTrTableId());
     }
 
-    public static final String C_CATEGORY_INCOME   = "1. Income";
-    public static final String C_CATEGORY_RENTDIST = "RentDistribution";
+    public static final String C_CATEGORY_INCOME       = "1. income";
+    public static final String C_CATEGORY_DISTRIBUTION = "2. distribution";
+
+    private static void createPersonalSummarySheet(XSSFWorkbook workBook, DBIfc dbIfc, Map<String, Float[]> propTable,
+                                                   final Map<String, ArrayList<TR>> companyTrMap,
+                                                   final Map<String, ArrayList<TR>> otherTrMap) throws DBException
+    {
+        XSSFSheet sheet = workBook.createSheet("PersonalSummary");
+
+        Map<String, Map<String, Float>> trTypeTotalMap = new HashMap<>();
+
+        for (final String name : otherTrMap.keySet())
+        {
+            final Map<String, Float> trTypeMap = trTypeTotal(otherTrMap.get(name));
+            trTypeTotalMap.put(name, trTypeMap);
+        }
+
+        List<String> listOtherEntities = new ArrayList<>(otherTrMap.keySet());
+        Collections.sort(listOtherEntities);
+        int rowNum = 0;
+        for (String otherName : listOtherEntities)
+        {
+            if (!("home equity interest".equalsIgnoreCase(otherName) || "homeinsurance".equalsIgnoreCase(otherName)
+                    || "primary home interest".equalsIgnoreCase(otherName) || "primary home taxes".equalsIgnoreCase(otherName)
+                    || "savings interest".equalsIgnoreCase(otherName)
+                    || "personal property auto tax".equalsIgnoreCase(otherName)))
+
+            {
+                continue;
+            }
+
+            rowNum++;
+            int col = 0;
+            XSSFRow currentRow = sheet.createRow(rowNum);
+            {
+                Cell cell = null;
+                cell = currentRow.createCell(col++);
+                cell.setCellValue(otherName);
+            }
+            Cell cell = currentRow.createCell(col++);
+
+            final Map<String, Float> otherTrTypeMap = trTypeTotalMap.get(otherName);
+            cell.setCellValue(otherTrTypeMap.get("ignore"));
+
+        }
+
+        sheet.setColumnWidth(0, 7000);
+        sheet.setColumnWidth(1, 3000);
+
+    }
 
     private static void createCompanySummarySheet(XSSFWorkbook workBook, DBIfc dbIfc, Map<String, Float[]> propTable,
                                                   final Map<String, ArrayList<TR>> companyTrMap,
@@ -779,7 +832,7 @@ public class AccountsMainApp
     {
         XSSFSheet sheet = workBook.createSheet("CompanySummary");
 
-        Map<String, Map<String, Float>> trTypeTotalMap = new HashMap<String, Map<String, Float>>();
+        Map<String, Map<String, Float>> trTypeTotalMap = new HashMap<>();
 
         Set<String> setOfCategories = new LinkedHashSet<>();
 
@@ -809,7 +862,7 @@ public class AccountsMainApp
             Map<String, Float> trTypeMap = trTypeTotalMap.get(mgmtComp);
             if (trTypeMap == null)
             {
-                trTypeMap = new HashMap<String, Float>();
+                trTypeMap = new HashMap<>();
                 trTypeTotalMap.put(mgmtComp, trTypeMap);
             }
             int ownerCount = 1;
@@ -817,7 +870,8 @@ public class AccountsMainApp
             {
                 ownerCount = rp.getOwnerCount();
             }
-            Float distribution = trTypeMap.get(C_CATEGORY_RENTDIST);
+            Float distribution = trTypeMap.get(C_CATEGORY_DISTRIBUTION);
+            System.out.println("Processing property=" + propName);
             if (distribution == null)
             {
                 distribution = -(propTable.get(propName)[scheduleEMap.get(RENT)] * ownerCount);
@@ -825,7 +879,7 @@ public class AccountsMainApp
             {
                 distribution += -(propTable.get(propName)[scheduleEMap.get(RENT)] * ownerCount);
             }
-            trTypeMap.put(C_CATEGORY_RENTDIST, distribution);
+            trTypeMap.put(C_CATEGORY_DISTRIBUTION, distribution);
 
         }
         for (final String name : otherTrMap.keySet())
@@ -835,14 +889,14 @@ public class AccountsMainApp
             setOfCategories.addAll(trTypeMap.keySet());
         }
 
-        setOfCategories.add(C_CATEGORY_RENTDIST);
-        List<String> listCompanies = new ArrayList<String>(companyTrMap.keySet());
+        setOfCategories.add(C_CATEGORY_DISTRIBUTION);
+        List<String> listCompanies = new ArrayList<>(companyTrMap.keySet());
         Collections.sort(listCompanies);
 
-        List<String> listOtherEntities = new ArrayList<String>(otherTrMap.keySet());
+        List<String> listOtherEntities = new ArrayList<>(otherTrMap.keySet());
         Collections.sort(listOtherEntities);
 
-        List<String> listCategories = new ArrayList<String>(setOfCategories);
+        List<String> listCategories = new ArrayList<>(setOfCategories);
         Collections.sort(listCategories);
 
         {// Create header
@@ -885,9 +939,9 @@ public class AccountsMainApp
             }
 
             Float income = new Float(0);
-            if (compTrTypeMap != null && compTrTypeMap.containsKey(C_CATEGORY_RENTDIST))
+            if (compTrTypeMap != null && compTrTypeMap.containsKey(C_CATEGORY_DISTRIBUTION))
             {
-                income = -(compTrTypeMap.get(C_CATEGORY_RENTDIST) * 100 / distPercent);
+                income = -(compTrTypeMap.get(C_CATEGORY_DISTRIBUTION) * 100 / distPercent);
                 compTrTypeMap.put(C_CATEGORY_INCOME, income);
             }
 
@@ -916,6 +970,12 @@ public class AccountsMainApp
 
         for (String otherName : listOtherEntities)
         {
+            if ("home equity interest".equalsIgnoreCase(otherName) || "homeinsurance".equalsIgnoreCase(otherName)
+                    || "primary home interest".equalsIgnoreCase(otherName) || "primary home taxes".equalsIgnoreCase(otherName)
+                    || "savings interest".equalsIgnoreCase(otherName) || "personal property auto tax".equalsIgnoreCase(otherName))
+            {
+                continue;
+            }
             rowNum++;
             int col = 0;
             XSSFRow currentRow = sheet.createRow(rowNum);
@@ -1048,8 +1108,9 @@ public class AccountsMainApp
         topAlignCellStyle.setVerticalAlignment(CellStyle.VERTICAL_TOP);
         createRentalSummarySheet(workBook, propTable);
         createCompanySummarySheet(workBook, dbIfc, propTable, companyTrMap, otherTrMap);
+        createPersonalSummarySheet(workBook, dbIfc, propTable, companyTrMap, otherTrMap);
 
-        Map<String, BankAccount> baMap = new TreeMap<String, BankAccount>(dbIfc.getAccounts());
+        Map<String, BankAccount> baMap = new TreeMap<>(dbIfc.getAccounts());
 
         for (BankAccount ba : baMap.values())
         {
@@ -1195,7 +1256,7 @@ public class AccountsMainApp
 
         }
         workBook.lockStructure();
-        String outFile = null;
+        String outFile = file;
         if (file == null)
         {
             String dir = System.getProperty("ACCOUNTSDB") + File.separator + "exporttr";
@@ -1204,7 +1265,7 @@ public class AccountsMainApp
             {
                 dirFile.mkdir();
             }
-            outFile = dir + File.separator + "export_allaccounts.xlsx";
+            outFile = dir + File.separator + "export_allaccounts_" + year + ".xlsx";
         }
         File outFileHandle = new File(outFile);
         if (outFileHandle.exists())
@@ -1279,14 +1340,14 @@ public class AccountsMainApp
         System.out.println("Export transactions completed.");
     }
 
-    private static List<BankAccount> importMultiple2DB(final String dir, boolean commit) throws ParseException, IOException,
+    private static List<BankAccount> importMultiple2DB(final String dir, boolean commit) throws AccountExp, IOException,
                                                                                          DBException
     {
         DBIfc dbIfc = DBFactory.createDBIfc();
 
         dbIfc.createAndConnectDB(null);
 
-        List<BankAccount> foundStmts = new ArrayList<BankAccount>();
+        List<BankAccount> foundStmts = new ArrayList<>();
 
         for (BankAccount ba : dbIfc.getAccounts().values())
         {
@@ -1295,16 +1356,33 @@ public class AccountsMainApp
             if (stmtFile.isFile())
             {
                 found = true;
-                final BankStatement bs = new BankStatement(stmtFile.getAbsolutePath(), ba.getName(), null);
+                BankStatement bs;
+                try
+                {
+                    bs = new BankStatement(stmtFile.getAbsolutePath(), ba.getName(), null);
+                    checkAndCommit(bs, commit);
+                } catch (IOException | DBException | ParseException e)
+                {
+                    // e.getMessage()
+                    throw new AccountExp(AccountExp.INVALID_INPUT,
+                            "Bank statement=" + stmtFile.getAbsolutePath() + ", exception=" + e);
+                }
 
-                checkAndCommit(bs, commit);
             }
 
             File stmtAddendumFile = new File(dir + File.separator + ba.getName() + "_addendum.csv");
             if (stmtAddendumFile.isFile())
             {
                 found = true;
-                final BankStatement bs = new BankStatement(stmtAddendumFile.getAbsolutePath(), ba.getName(), null);
+                BankStatement bs;
+                try
+                {
+                    bs = new BankStatement(stmtAddendumFile.getAbsolutePath(), ba.getName(), null);
+                } catch (IOException | DBException | ParseException e)
+                {
+                    // TODO Auto-generated catch block
+                    throw new AccountExp(AccountExp.INVALID_INPUT, "Bank statement=" + ba.getBankName() + ", exception=" + e);
+                }
 
                 checkAndCommit(bs, commit);
             }
@@ -1516,35 +1594,35 @@ public class AccountsMainApp
         System.out.println("        Recommended to keep all statements under $ACCOUNTSDB/bank_stmts directory\n");
         System.out.println("    -A classifyindb -taxconfig <f> -year <yyyy>\n");
         System.out.println("    -A exp2excel -year <yyyy> [-accountname <n>] [-file <f.xlsx>] [-filter \"tr types\"]\n");
-        System.out.println("    -A impexcel [-commit] [-setasis] [-accountname <n>] [-file <f.xlsx>]\n");
+        System.out.println("    -A impexcel -year <yyyy> [-commit] [-setasis] [-accountname <n>] [-file <f.xlsx>]\n");
         System.out.println("    -A classify_exp -taxconfig <f> -year <yyyy>\n");
 
         System.exit(1);
     }
 
-    public static final String PARSE            = "parse";
-    public static final String IMPORT2DB        = "import2db";
-    public static final String PARSEANDCLASSIFY = "parseandclassify";
-    public static final String CLASSIFYINDB     = "classifyindb";
-    public static final String EXP2EXCEL        = "exp2excel";
-    public static final String IMPEXCEL         = "impexcel";
-    public static final String CLASSIFY_EXP     = "classify_exp";
+    public static final String              PARSE            = "parse";
+    public static final String              IMPORT2DB        = "import2db";
+    public static final String              PARSEANDCLASSIFY = "parseandclassify";
+    public static final String              CLASSIFYINDB     = "classifyindb";
+    public static final String              EXP2EXCEL        = "exp2excel";
+    public static final String              IMPEXCEL         = "impexcel";
+    public static final String              CLASSIFY_EXP     = "classify_exp";
 
-    public static final String DELETETRS = "deletetrs";
+    public static final String              DELETETRS        = "deletetrs";
 
-    public static final String              CREATEACS       = "createacs";
-    public static final String              LISTACS         = "listacs";
-    public static final String              DELETEACS       = "deleteacs";
-    public static final String              CREATEPROPS     = "createprops";
-    public static final String              LISTPROPS       = "listprops";
-    public static final String              DELETEPROPS     = "deleteprops";
-    public static final String              CREATEGROUPS    = "creategroups";
-    public static final String              LISTGROUPS      = "listgroups";
-    public static final String              DELETEGROUPS    = "deletegroups";
-    public static final String              CREATECOMPANIES = "createcompanies";
-    public static final String              LISTCOMPANIES   = "listcompanies";
-    public static final String              DELETECOMPANIES = "deletecompanies";
-    public static final Map<String, String> ALL_OPTS        = new HashMap<String, String>();
+    public static final String              CREATEACS        = "createacs";
+    public static final String              LISTACS          = "listacs";
+    public static final String              DELETEACS        = "deleteacs";
+    public static final String              CREATEPROPS      = "createprops";
+    public static final String              LISTPROPS        = "listprops";
+    public static final String              DELETEPROPS      = "deleteprops";
+    public static final String              CREATEGROUPS     = "creategroups";
+    public static final String              LISTGROUPS       = "listgroups";
+    public static final String              DELETEGROUPS     = "deletegroups";
+    public static final String              CREATECOMPANIES  = "createcompanies";
+    public static final String              LISTCOMPANIES    = "listcompanies";
+    public static final String              DELETECOMPANIES  = "deletecompanies";
+    public static final Map<String, String> ALL_OPTS         = new HashMap<>();
 
     static
     {
@@ -1804,10 +1882,10 @@ public class AccountsMainApp
                 }
                 final TaxConfig tc = new TaxConfig(argHash.get("taxconfig"));
                 DBIfc dbIfc = classifyindb(tc);
-                Map<String, Float[]> propTable = new TreeMap<String, Float[]>();
+                Map<String, Float[]> propTable = new TreeMap<>();
 
-                final Map<String, ArrayList<TR>> companyTrMap = new HashMap<String, ArrayList<TR>>();
-                final Map<String, ArrayList<TR>> otherTrMap = new HashMap<String, ArrayList<TR>>();
+                final Map<String, ArrayList<TR>> companyTrMap = new HashMap<>();
+                final Map<String, ArrayList<TR>> otherTrMap = new HashMap<>();
                 StringBuffer sb = report(new Integer(argHash.get("year")).intValue(), dbIfc, propTable, companyTrMap, otherTrMap);
                 if (sb.length() == 0)
                 {
@@ -1825,9 +1903,9 @@ public class AccountsMainApp
                 }
                 DBIfc dbIfc = DBFactory.createDBIfc();
                 dbIfc.createAndConnectDB(null);
-                Map<String, Float[]> propTable = new TreeMap<String, Float[]>();
-                final Map<String, ArrayList<TR>> companyTrMap = new HashMap<String, ArrayList<TR>>();
-                final Map<String, ArrayList<TR>> otherTrMap = new HashMap<String, ArrayList<TR>>();
+                Map<String, Float[]> propTable = new TreeMap<>();
+                final Map<String, ArrayList<TR>> companyTrMap = new HashMap<>();
+                final Map<String, ArrayList<TR>> otherTrMap = new HashMap<>();
                 StringBuffer sb = report(new Integer(argHash.get("year")).intValue(), dbIfc, propTable, companyTrMap, otherTrMap);
                 if (sb.length() == 0)
                 {
@@ -1841,8 +1919,12 @@ public class AccountsMainApp
 
             } else if (IMPEXCEL.equalsIgnoreCase(action))
             {
-                importFromExcel(argHash.get("accountname"), argHash.get("file"), argHash.get("commit") != null,
-                        argHash.get("setasis") != null);
+                if (argHash.get("year") == null)
+                {
+                    usage("-year argument is required.");
+                }
+                importFromExcel(argHash.get("accountname"), argHash.get("file"), new Integer(argHash.get("year")).intValue(),
+                        argHash.get("commit") != null, argHash.get("setasis") != null);
 
             } else if (CLASSIFY_EXP.equalsIgnoreCase(action))
             {
@@ -1856,9 +1938,9 @@ public class AccountsMainApp
                 }
                 final TaxConfig tc = new TaxConfig(argHash.get("taxconfig"));
                 DBIfc dbIfc = classifyindb(tc);
-                Map<String, Float[]> propTable = new TreeMap<String, Float[]>();
-                final Map<String, ArrayList<TR>> companyTrMap = new HashMap<String, ArrayList<TR>>();
-                final Map<String, ArrayList<TR>> otherTrMap = new HashMap<String, ArrayList<TR>>();
+                Map<String, Float[]> propTable = new TreeMap<>();
+                final Map<String, ArrayList<TR>> companyTrMap = new HashMap<>();
+                final Map<String, ArrayList<TR>> otherTrMap = new HashMap<>();
                 StringBuffer sb = report(new Integer(argHash.get("year")).intValue(), dbIfc, propTable, companyTrMap, otherTrMap);
                 if (sb.length() == 0)
                 {

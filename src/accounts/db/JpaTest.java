@@ -10,7 +10,7 @@ import javax.persistence.Persistence;
 public class JpaTest
 {
 
-    private static final String         PERSISTENCE_UNIT_NAME = "taxaccounting";
+    private static final String         PERSISTENCE_UNIT_NAME = "sicg";
     private static EntityManagerFactory factory;
 
     public static void main(String[] args)

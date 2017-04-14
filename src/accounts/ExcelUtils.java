@@ -74,7 +74,8 @@ public class ExcelUtils
         {
             XSSFSheet sheet = workbook.getSheetAt(i);
             String sheetName = workbook.getSheetName(i);
-            if ("RentalSummary".equalsIgnoreCase(sheetName) || "CompanySummary".equalsIgnoreCase(sheetName))
+            if ("RentalSummary".equalsIgnoreCase(sheetName) || "CompanySummary".equalsIgnoreCase(sheetName)
+                    || "PersonalSummary".equalsIgnoreCase(sheetName))
             {
                 continue;
             }
