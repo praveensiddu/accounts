@@ -555,7 +555,7 @@ public class AccountsMainApp
     private static void importFromCsv(String accountName, String file) throws DBException, IOException, ParseException
     {
         DBIfc dbIfc = DBFactory.createDBIfc();
-        dbIfc.createAndConnectDB(null);
+        dbIfc.createAndConnectDB();
         if (accountName == null && file != null)
         {
             throw new IOException("Account cannot be null when file name is specified.");
@@ -607,7 +607,7 @@ public class AccountsMainApp
     {
         DBIfc dbIfc = DBFactory.createDBIfc();
         AccountsUtil.createInstance();
-        dbIfc.createAndConnectDB(null);
+        dbIfc.createAndConnectDB();
         if (accountName == null && file != null)
         {
             throw new IOException("Account cannot be null when file name is specified.");
@@ -770,7 +770,7 @@ public class AccountsMainApp
     private static void deleteTrs(String accountName) throws DBException, IOException
     {
         DBIfc dbi = DBFactory.createDBIfc();
-        dbi.createAndConnectDB(null);
+        dbi.createAndConnectDB();
         BankAccount ba = dbi.getAccounts().get(accountName);
         dbi.deleteTransactions(ba.getTrTableId());
     }
@@ -1083,7 +1083,7 @@ public class AccountsMainApp
     {
         DBIfc dbIfc = DBFactory.createDBIfc();
 
-        dbIfc.createAndConnectDB(null);
+        dbIfc.createAndConnectDB();
 
         if (accountName != null)
         {
@@ -1250,12 +1250,12 @@ public class AccountsMainApp
             sheet.setColumnWidth(5, 4000);
             sheet.setColumnWidth(6, 6000);
             sheet.setColumnWidth(7, 6000);
-            sheet.protectSheet("password");
+            // sheet.protectSheet("password");
 
             // Locks the whole sheet sheet.enableLocking();
 
         }
-        workBook.lockStructure();
+        // workBook.lockStructure();
         String outFile = file;
         if (file == null)
         {
@@ -1287,7 +1287,7 @@ public class AccountsMainApp
     {
         DBIfc dbIfc = DBFactory.createDBIfc();
 
-        dbIfc.createAndConnectDB(null);
+        dbIfc.createAndConnectDB();
 
         if (accountName == null && file != null)
         {
@@ -1345,7 +1345,7 @@ public class AccountsMainApp
     {
         DBIfc dbIfc = DBFactory.createDBIfc();
 
-        dbIfc.createAndConnectDB(null);
+        dbIfc.createAndConnectDB();
 
         List<BankAccount> foundStmts = new ArrayList<>();
 
@@ -1396,7 +1396,7 @@ public class AccountsMainApp
     {
         DBIfc dbIfc = DBFactory.createDBIfc();
 
-        dbIfc.createAndConnectDB(null);
+        dbIfc.createAndConnectDB();
         for (BankAccount ba : dbIfc.getAccounts().values())
         {
             Map<TRId, TR> trMap = dbIfc.getTransactions(ba.getTrTableId());
@@ -1591,7 +1591,7 @@ public class AccountsMainApp
                 "    (unit test only)-A parseandclassify -bankstatement <csvfile> -accountname <n> -taxconfig <f> [-bankstformat <f> ]\n");
         System.out.println("    -A import2db {-dir <dir> | {-bankstatement <csv> -accountname <n>} } [-commit]");
         System.out.println("        dir contains csv files with name accountname.csv or accountname_addendum.csv");
-        System.out.println("        Recommended to keep all statements under $ACCOUNTSDB/bank_stmts directory\n");
+        System.out.println("        Recommended to keep all statements under $ACCOUNTS_DATA/bank_stmts directory\n");
         System.out.println("    -A classifyindb -taxconfig <f> -year <yyyy>\n");
         System.out.println("    -A exp2excel -year <yyyy> [-accountname <n>] [-file <f.xlsx>] [-filter \"tr types\"]\n");
         System.out.println("    -A impexcel -year <yyyy> [-commit] [-setasis] [-accountname <n>] [-file <f.xlsx>]\n");
@@ -1660,7 +1660,7 @@ public class AccountsMainApp
                 }
                 List<BankAccount> acL = DBImpl.parseAccountFile(argHash.get("file"));
                 DBIfc dbi = DBFactory.createDBIfc();
-                dbi.createAndConnectDB(null);
+                dbi.createAndConnectDB();
                 int initialCount = dbi.getAccounts().size();
                 for (BankAccount ac : acL)
                 {
@@ -1680,7 +1680,7 @@ public class AccountsMainApp
             } else if (LISTACS.equalsIgnoreCase(action))
             {
                 DBIfc dbi = DBFactory.createDBIfc();
-                dbi.createAndConnectDB(null);
+                dbi.createAndConnectDB();
                 for (BankAccount ba : dbi.getAccounts().values())
                 {
                     System.out.println(ba);
@@ -1693,7 +1693,7 @@ public class AccountsMainApp
                 }
                 List<BankAccount> acL = DBImpl.parseAccountFile(argHash.get("file"));
                 DBIfc dbi = DBFactory.createDBIfc();
-                dbi.createAndConnectDB(null);
+                dbi.createAndConnectDB();
                 int initialCount = dbi.getAccounts().size();
                 for (BankAccount ac : acL)
                 {
@@ -1712,7 +1712,7 @@ public class AccountsMainApp
                 }
                 List<RealProperty> rpL = DBImpl.parsePropFile(argHash.get("file"));
                 DBIfc dbi = DBFactory.createDBIfc();
-                dbi.createAndConnectDB(null);
+                dbi.createAndConnectDB();
                 for (RealProperty rp : rpL)
                 {
                     dbi.createProperty(rp);
@@ -1724,7 +1724,7 @@ public class AccountsMainApp
             } else if (LISTPROPS.equalsIgnoreCase(action))
             {
                 DBIfc dbi = DBFactory.createDBIfc();
-                dbi.createAndConnectDB(null);
+                dbi.createAndConnectDB();
                 for (RealProperty rp1 : dbi.getProperties().values())
                 {
                     System.out.println(rp1);
@@ -1737,7 +1737,7 @@ public class AccountsMainApp
                 }
                 List<RealProperty> rpL = DBImpl.parsePropFile(argHash.get("file"));
                 DBIfc dbi = DBFactory.createDBIfc();
-                dbi.createAndConnectDB(null);
+                dbi.createAndConnectDB();
                 for (RealProperty rp : rpL)
                 {
                     dbi.deleteProperty(rp.getPropertyName());
@@ -1754,7 +1754,7 @@ public class AccountsMainApp
                 }
                 List<IGroup> rpL = DBImpl.parseGroupFile(argHash.get("file"));
                 DBIfc dbi = DBFactory.createDBIfc();
-                dbi.createAndConnectDB(null);
+                dbi.createAndConnectDB();
                 for (IGroup rp : rpL)
                 {
                     dbi.createGroup(rp);
@@ -1766,7 +1766,7 @@ public class AccountsMainApp
             } else if (LISTGROUPS.equalsIgnoreCase(action))
             {
                 DBIfc dbi = DBFactory.createDBIfc();
-                dbi.createAndConnectDB(null);
+                dbi.createAndConnectDB();
                 for (IGroup rp1 : dbi.getGroupsMap().values())
                 {
                     System.out.println(rp1);
@@ -1779,7 +1779,7 @@ public class AccountsMainApp
                 }
                 List<IGroup> rpL = DBImpl.parseGroupFile(argHash.get("file"));
                 DBIfc dbi = DBFactory.createDBIfc();
-                dbi.createAndConnectDB(null);
+                dbi.createAndConnectDB();
                 for (IGroup rp : rpL)
                 {
                     dbi.deleteGroup(rp.getName());
@@ -1796,7 +1796,7 @@ public class AccountsMainApp
                 }
                 List<Company> rpL = DBImpl.parseCompanyFile(argHash.get("file"));
                 DBIfc dbi = DBFactory.createDBIfc();
-                dbi.createAndConnectDB(null);
+                dbi.createAndConnectDB();
                 for (Company rp : rpL)
                 {
                     dbi.createCompany(rp);
@@ -1809,7 +1809,7 @@ public class AccountsMainApp
             } else if (LISTCOMPANIES.equalsIgnoreCase(action))
             {
                 DBIfc dbi = DBFactory.createDBIfc();
-                dbi.createAndConnectDB(null);
+                dbi.createAndConnectDB();
                 for (Company rp1 : dbi.getCompanies().values())
                 {
                     System.out.println(rp1);
@@ -1822,7 +1822,7 @@ public class AccountsMainApp
                 }
                 List<Company> rpL = DBImpl.parseCompanyFile(argHash.get("file"));
                 DBIfc dbi = DBFactory.createDBIfc();
-                dbi.createAndConnectDB(null);
+                dbi.createAndConnectDB();
                 for (Company rp : rpL)
                 {
                     dbi.deleteCompany(rp.getName());
@@ -1902,7 +1902,7 @@ public class AccountsMainApp
                     usage("-year argument is required.");
                 }
                 DBIfc dbIfc = DBFactory.createDBIfc();
-                dbIfc.createAndConnectDB(null);
+                dbIfc.createAndConnectDB();
                 Map<String, Float[]> propTable = new TreeMap<>();
                 final Map<String, ArrayList<TR>> companyTrMap = new HashMap<>();
                 final Map<String, ArrayList<TR>> otherTrMap = new HashMap<>();

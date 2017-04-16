@@ -26,7 +26,7 @@ public class DBFactory
         DBIfc dbIfc = DBFactory.createDBIfc();
         try
         {
-            dbIfc.createAndConnectDB(null);
+            dbIfc.createAndConnectDB();
         } catch (IOException e)
         {
             // TODO Auto-generated catch block

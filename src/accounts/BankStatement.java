@@ -38,7 +38,7 @@ public class BankStatement
             throw new IOException("Statement file name is null: " + filename);
         }
         accountName = accountName.toLowerCase().trim();
-        dbIfc.createAndConnectDB(null);
+        dbIfc.createAndConnectDB();
         if (!dbIfc.getAccounts().containsKey(accountName))
         {
             throw new IOException("Account is not present: " + accountName + ", List=" + dbIfc.getAccounts().keySet());

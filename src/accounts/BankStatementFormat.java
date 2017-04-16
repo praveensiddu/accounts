@@ -12,27 +12,27 @@ public class BankStatementFormat
     public static final String IGNORE_LINES_STARTSWITH = "ignore_lines_startswith";
     public static final String IGNORE_LINES_CONTAINS   = "ignore_lines_contains";
 
-    public static final String DATE_COl          = "date_col";
-    public static final String DESCRIPTION_COL   = "description_col";
-    public static final String MEMO_COL          = "memo_col";
-    public static final String AMOUNT_DEBIT_COL  = "amount_debit_col";
-    public static final String AMOUNT_CREDIT_COL = "amount_credit_col";
-    public static final String CHECK_NUMBER_COL  = "check_number_col";
-    public static final String FEES_COL          = "fees_col";
-    public static final String DATE_FORMAT       = "date_format";
+    public static final String DATE_COl                = "date_col";
+    public static final String DESCRIPTION_COL         = "description_col";
+    public static final String MEMO_COL                = "memo_col";
+    public static final String AMOUNT_DEBIT_COL        = "amount_debit_col";
+    public static final String AMOUNT_CREDIT_COL       = "amount_credit_col";
+    public static final String CHECK_NUMBER_COL        = "check_number_col";
+    public static final String FEES_COL                = "fees_col";
+    public static final String DATE_FORMAT             = "date_format";
 
-    private List<String> ignLineStartsWith = new ArrayList<String>();
+    private List<String>       ignLineStartsWith       = new ArrayList<>();
 
-    private List<String> ignLineContains = new ArrayList<String>();
+    private List<String>       ignLineContains         = new ArrayList<>();
 
-    private int    dateIndex    = -1;
-    private int    descIndex    = -1;
-    private int    memoIndex    = -1;
-    private int    debitIndex   = -1;
-    private int    creditIndex  = -1;
-    private int    checkNoIndex = -1;
-    private int    feesIndex    = -1;
-    private String dateFormat;
+    private int                dateIndex               = -1;
+    private int                descIndex               = -1;
+    private int                memoIndex               = -1;
+    private int                debitIndex              = -1;
+    private int                creditIndex             = -1;
+    private int                checkNoIndex            = -1;
+    private int                feesIndex               = -1;
+    private String             dateFormat;
 
     public List<String> getIgnLineStartsWith()
     {
@@ -68,8 +68,7 @@ public class BankStatementFormat
                 throw new IOException(
                         "Set Java system property ACCOUNTSDB to directory where accounts repository is present or to be created");
             }
-            file = System.getProperty("ACCOUNTSDB") + File.separator + "config" + File.separator + bankName
-                    + "_statement_format.txt";
+            file = AccountsUtil.getConfigDir() + File.separator + bankName + "_statement_format.txt";
         }
         File f = new File(file);
         if (!f.exists())

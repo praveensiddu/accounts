@@ -30,18 +30,18 @@ public class DBImpl implements DBIfc
     private Map<String, Company>      companiesMap;
     private Map<String, IGroup>       groupsMap;
 
-    private void createOtherDirectories(String dir) throws IOException
+    private void createOtherDirectories(String data_dir) throws IOException
     {
 
-        File d = new File(dir);
+        File d = new File(data_dir);
         if (!d.exists())
         {
-            throw new IOException("Directory not present=" + dir);
+            throw new IOException("Directory not present=" + data_dir);
         }
         String dirs[] = { "classify_rules", "bank_stmts", "config", "samples" };
         for (String dirtocreate : dirs)
         {
-            String pathDir = dir + File.separator + dirtocreate + File.separator;
+            String pathDir = data_dir + File.separator + dirtocreate + File.separator;
             File pathFile = new File(pathDir);
             pathFile.mkdir();
             if (!pathFile.exists())
@@ -52,7 +52,7 @@ public class DBImpl implements DBIfc
 
         for (int i = 2014; i < 2030; i++)
         {
-            String yearDir = dir + File.separator + "bank_stmts" + File.separator + i + File.separator;
+            String yearDir = data_dir + File.separator + "bank_stmts" + File.separator + i + File.separator;
             File yearDirFile = new File(yearDir);
             yearDirFile.mkdir();
         }
@@ -63,7 +63,7 @@ public class DBImpl implements DBIfc
                     "Internal error. Unable to find resource in package=" + "/accounts/resources/bbt_statement_format.txt");
 
         }
-        String configDir = dir + File.separator + "config";
+        String configDir = data_dir + File.separator + "config";
 
         String cfgFiles[] = { "bbt_statement_format.txt", "dcu_statement_format.txt", "dcu_visa_statement_format.txt",
                 "wellsfargo_statement_format.txt", "amex_statement_format.txt", "transaction_types.txt", "tax_category.txt" };
@@ -75,7 +75,7 @@ public class DBImpl implements DBIfc
                         fmtFile.toPath());
         }
 
-        String samplesDir = dir + File.separator + "samples";
+        String samplesDir = data_dir + File.separator + "samples";
 
         String samplesFiles[] = { "bankaccounts.csv", "properties.csv", "groups.csv", "companies.csv" };
         for (String sampleFile : samplesFiles)
@@ -86,7 +86,7 @@ public class DBImpl implements DBIfc
                         fmtFile.toPath());
         }
 
-        String classifyRulesDir = dir + File.separator + "classify_rules";
+        String classifyRulesDir = data_dir + File.separator + "classify_rules";
         File fmtFile = new File(classifyRulesDir + File.separator + "CommonRulesInclude_Rental.txt");
         if (!fmtFile.exists())
             Files.copy(new File(getClass().getResource("/accounts/resources/CommonRulesInclude_Rental.txt").getFile()).toPath(),
@@ -95,11 +95,13 @@ public class DBImpl implements DBIfc
     }
 
     @Override
-    public void createAndConnectDB(String dir) throws IOException
+    public void createAndConnectDB() throws IOException
     {
+        String db_dir = null;
+        String data_dir = null;
         if (factory == null)
         {
-            if (dir == null)
+            if (db_dir == null)
             {
                 if (System.getProperty("ACCOUNTSDB") == null)
                 {
@@ -107,16 +109,28 @@ public class DBImpl implements DBIfc
                             "Set Java system property ACCOUNTSDB to directory where accounts repository is present or to be created");
                 } else
                 {
-                    dir = System.getProperty("ACCOUNTSDB");
+                    db_dir = System.getProperty("ACCOUNTSDB");
+                }
+                if (System.getProperty("ACCOUNTS_DATA") == null)
+                {
+                    throw new IOException(
+                            "Set Java system property ACCOUNTS_DATA to directory where accounts repository is present or to be created");
+                } else
+                {
+                    data_dir = System.getProperty("ACCOUNTS_DATA");
                 }
             }
-            File d = new File(dir);
+            File d = new File(db_dir);
             if (!d.exists())
             {
-                throw new IOException("Directory not present=" + dir);
+                throw new IOException("Directory not present=" + db_dir);
+            }
+            if (!(new File(data_dir)).exists())
+            {
+                throw new IOException("Directory not present=" + data_dir);
             }
 
-            Map<String, String> properties = new HashMap<String, String>();
+            Map<String, String> properties = new HashMap<>();
             properties.put("javax.persistence.jdbc.url",
                     "jdbc:derby:" + d.getCanonicalPath().replace("\\", "/") + "/taxdb;create=true");
             factory = Persistence.createEntityManagerFactory("taxaccounting", properties);
@@ -124,7 +138,7 @@ public class DBImpl implements DBIfc
             EntityManager em = factory.createEntityManager();
             em.close();
 
-            createOtherDirectories(dir);
+            createOtherDirectories(data_dir);
         }
         EntityManager em = factory.createEntityManager();
         List<BankAccount> acList = em.createNamedQuery("BankAccount.getList", BankAccount.class).getResultList();
@@ -132,22 +146,22 @@ public class DBImpl implements DBIfc
         List<IGroup> groupList = em.createNamedQuery("IGroup.getList", IGroup.class).getResultList();
         List<Company> companyList = em.createNamedQuery("Company.getList", Company.class).getResultList();
         em.close();
-        accountsMap = new HashMap<String, BankAccount>();
+        accountsMap = new HashMap<>();
         for (BankAccount ba : acList)
         {
             accountsMap.put(ba.getName(), ba);
         }
-        propertiesMap = new HashMap<String, RealProperty>();
+        propertiesMap = new HashMap<>();
         for (RealProperty prop : propList)
         {
             propertiesMap.put(prop.getPropertyName(), prop);
         }
-        groupsMap = new HashMap<String, IGroup>();
+        groupsMap = new HashMap<>();
         for (IGroup group : groupList)
         {
             groupsMap.put(group.getName(), group);
         }
-        companiesMap = new HashMap<String, Company>();
+        companiesMap = new HashMap<>();
         for (Company prop : companyList)
         {
             companiesMap.put(prop.getName(), prop);
@@ -493,7 +507,7 @@ public class DBImpl implements DBIfc
             tr.setTrId(); // TrId is not filled by JPA. So set it.
         }
 
-        Map<TRId, TR> trMap = new TreeMap<TRId, TR>();
+        Map<TRId, TR> trMap = new TreeMap<>();
         for (TR tr : trList)
         {
             TRId trId = tr.getTrId();
@@ -615,7 +629,7 @@ public class DBImpl implements DBIfc
     {
         final FileReader fr = new FileReader(filename);
         final BufferedReader br = new BufferedReader(fr);
-        List<BankAccount> aL = new ArrayList<BankAccount>();
+        List<BankAccount> aL = new ArrayList<>();
         try
         {
             for (String line; (line = br.readLine()) != null;)
@@ -673,7 +687,7 @@ public class DBImpl implements DBIfc
 
         final FileReader fr = new FileReader(filename);
         final BufferedReader br = new BufferedReader(fr);
-        List<Company> rpL = new ArrayList<Company>();
+        List<Company> rpL = new ArrayList<>();
         try
         {
             for (String line; (line = br.readLine()) != null;)
@@ -730,7 +744,7 @@ public class DBImpl implements DBIfc
 
         final FileReader fr = new FileReader(filename);
         final BufferedReader br = new BufferedReader(fr);
-        List<RealProperty> rpL = new ArrayList<RealProperty>();
+        List<RealProperty> rpL = new ArrayList<>();
         try
         {
             for (String line; (line = br.readLine()) != null;)
@@ -797,7 +811,7 @@ public class DBImpl implements DBIfc
 
         final FileReader fr = new FileReader(filename);
         final BufferedReader br = new BufferedReader(fr);
-        List<IGroup> rpL = new ArrayList<IGroup>();
+        List<IGroup> rpL = new ArrayList<>();
         try
         {
             for (String line; (line = br.readLine()) != null;)
@@ -820,7 +834,7 @@ public class DBImpl implements DBIfc
 
                 IGroup grp = new IGroup();
                 grp.setName(fields[0]);
-                List<String> members = new ArrayList<String>();
+                List<String> members = new ArrayList<>();
                 for (int i = 1; i < fields.length; i++)
                 {
                     String member = fields[i].trim().toLowerCase();
@@ -881,18 +895,18 @@ public class DBImpl implements DBIfc
         System.exit(1);
     }
 
-    public static final String CREATEAC     = "createac";
-    public static final String CREATEACS    = "createacs";
-    public static final String DELETEAC     = "deleteac";
-    public static final String DELETEACS    = "deleteacs";
-    public static final String CREATEPROP   = "createprop";
-    public static final String CREATEPROPS  = "createprops";
-    public static final String DELETEPROP   = "deleteprop";
-    public static final String DELETEPROPS  = "deleteprops";
-    public static final String CREATEGROUPS = "creategroups";
-    public static final String DELETEGROUPS = "deletegroups";
+    public static final String              CREATEAC     = "createac";
+    public static final String              CREATEACS    = "createacs";
+    public static final String              DELETEAC     = "deleteac";
+    public static final String              DELETEACS    = "deleteacs";
+    public static final String              CREATEPROP   = "createprop";
+    public static final String              CREATEPROPS  = "createprops";
+    public static final String              DELETEPROP   = "deleteprop";
+    public static final String              DELETEPROPS  = "deleteprops";
+    public static final String              CREATEGROUPS = "creategroups";
+    public static final String              DELETEGROUPS = "deletegroups";
 
-    public static final Map<String, String> ALL_OPTS = new HashMap<String, String>();
+    public static final Map<String, String> ALL_OPTS     = new HashMap<>();
 
     static
     {
@@ -919,7 +933,7 @@ public class DBImpl implements DBIfc
         DBImpl dbi = new DBImpl();
         try
         {
-            dbi.createAndConnectDB(null);
+            dbi.createAndConnectDB();
         } catch (IOException e)
         {
             // TODO Auto-generated catch block

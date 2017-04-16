@@ -1,3 +1,8 @@
+template for classifyrules should add JOIN_FILE info
+Remove bank related sample data
+
+
+
 Classify should say how many records were changed
 Add realestate 1099
 1098 from pennymac jgw home lending

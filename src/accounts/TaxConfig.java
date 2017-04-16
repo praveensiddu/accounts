@@ -6,39 +6,35 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 public class TaxConfig
 {
-    public static final String BACCOUNT         = "baccount";
-    public static final String TRANSACTION_TYPE = "transaction_type";
-    public static final String INCLUDE_FILE     = "include_file";
-    public static final String DESC_CONTAINS    = "desc_contains";
-    public static final String DESC_STARTSWITH  = "desc_startswith";
-    public static final String DEBIT_EQUALS     = "debit_equals";
-    public static final String CLOSERULE        = "closerule";
+    public static final String                 BACCOUNT         = "baccount";
+    public static final String                 TRANSACTION_TYPE = "transaction_type";
+    public static final String                 JOIN_FILE        = "join_file";
+    public static final String                 INCLUDE_FILE     = "include_file";
+    public static final String                 DESC_CONTAINS    = "desc_contains";
+    public static final String                 DESC_STARTSWITH  = "desc_startswith";
+    public static final String                 DEBIT_EQUALS     = "debit_equals";
+    public static final String                 CLOSERULE        = "closerule";
 
-    public static final String TAX_CATEGORY = "tax_category";
-    public static final String PROPERTY     = "property";
-    public static final String OTHERENTITY  = "otherentity";
-    private File               configFile   = null;
+    public static final String                 TAX_CATEGORY     = "tax_category";
+    public static final String                 PROPERTY         = "property";
+    public static final String                 OTHERENTITY      = "otherentity";
+    private File                               configFile       = null;
 
-    private Map<String, ArrayList<RuleRecord>> accountsMap = new HashMap<String, ArrayList<RuleRecord>>();
+    private Map<String, ArrayList<RuleRecord>> accountsMap      = new HashMap<>();
 
-    public TaxConfig(final String file) throws IOException
+    public static ArrayList<String> getLines(final String file) throws IOException
     {
         final FileReader fr = new FileReader(file);
-        configFile = new File(file);
         final BufferedReader br = new BufferedReader(fr);
+        ArrayList<String> lines = new ArrayList<>();
         try
         {
-            String currentAccount = null;
-            String currentProperty = null;
-            String currOtherEntity = null;
-
             int lineno = 1;
-            RuleRecord rr = new RuleRecord();
-            rr.setLineno(1);
             for (String line; (line = br.readLine()) != null; lineno++)
             {
                 line = line.trim();
@@ -53,7 +49,8 @@ public class TaxConfig
                 String[] fields = line.split("=", -1);
                 if (fields.length != 2)
                 {
-                    throw new IOException("invalid format at line=" + lineno + ", Expected format key=value. Found=" + line);
+                    throw new IOException(
+                            "invalid format at file=" + file + " line=" + lineno + ", Expected format key=value. Found=" + line);
                 }
 
                 String key = fields[0].trim().toLowerCase();
@@ -63,9 +60,80 @@ public class TaxConfig
                 {
                     if (!PROPERTY.equals(key) && !OTHERENTITY.equals(key) && !TAX_CATEGORY.equals(key))
                     {
-                        throw new IOException("invalid format at line=" + lineno + ", Expected format key=value. Found=" + line);
+                        throw new IOException("invalid format at file=" + file + " line=" + lineno
+                                + ", Expected format key=value. Found=" + line);
                     }
                 }
+                if (JOIN_FILE.equals(key))
+                {
+                    File valFile = new File(valueAsIs);
+                    if (!valFile.isAbsolute())
+                    {
+                        valueAsIs = new File(file).getParent() + File.separator + valueAsIs;
+                    }
+                    lines.addAll(getLines(valueAsIs));
+                } else
+                {
+                    lines.add(line);
+                }
+            }
+        } finally
+        {
+            if (br != null)
+            {
+                try
+                {
+                    br.close();
+                } catch (final IOException e)
+                {
+                    // Ignore
+                }
+            }
+            if (fr != null)
+            {
+                try
+                {
+                    fr.close();
+                } catch (final IOException e)
+                {
+                    // Ignore
+                }
+            }
+        }
+        return lines;
+    }
+
+    public TaxConfig(final String file) throws IOException
+    {
+        configFile = new File(file);
+        ArrayList<String> lines = getLines(file);
+
+        try
+        {
+            String currentAccount = null;
+            String currentProperty = null;
+            String currOtherEntity = null;
+
+            RuleRecord rr = new RuleRecord();
+            rr.setLineno(1);
+
+            for (Iterator<String> it = lines.iterator(); it.hasNext();)
+            {
+                String line = it.next().trim();
+                if (line.isEmpty())
+                {
+                    continue;
+                }
+                if (line.startsWith("#"))
+                {
+                    continue;
+                }
+                String[] fields = line.split("=", -1);
+
+                String key = fields[0].trim().toLowerCase();
+                String valueAsIs = fields[1].trim();
+                String value = fields[1].trim().toLowerCase();
+
                 if (currentAccount == null)
                 {
                     if (!BACCOUNT.equals(key))
@@ -91,14 +159,14 @@ public class TaxConfig
                     rr = rr.createNew();
                     rr.setProperty(currentProperty);
                     rr.setOtherEntity(currOtherEntity);
-                    rr.setLineno(lineno);
+                    // rr.setLineno(lineno);
 
                     rr.setTrType(value);
 
                     ArrayList<RuleRecord> arr = accountsMap.get(currentAccount);
                     if (arr == null)
                     {
-                        arr = new ArrayList<RuleRecord>();
+                        arr = new ArrayList<>();
                         accountsMap.put(currentAccount, arr);
                     }
                     arr.add(rr);
@@ -113,7 +181,7 @@ public class TaxConfig
                     ArrayList<RuleRecord> arr = accountsMap.get(currentAccount);
                     if (arr == null)
                     {
-                        arr = new ArrayList<RuleRecord>();
+                        arr = new ArrayList<>();
                         accountsMap.put(currentAccount, arr);
                     }
                     File valFile = new File(valueAsIs);
@@ -154,26 +222,7 @@ public class TaxConfig
             }
         } finally
         {
-            if (br != null)
-            {
-                try
-                {
-                    br.close();
-                } catch (final IOException e)
-                {
-                    // Ignore
-                }
-            }
-            if (fr != null)
-            {
-                try
-                {
-                    fr.close();
-                } catch (final IOException e)
-                {
-                    // Ignore
-                }
-            }
+
         }
     }
 

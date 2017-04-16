@@ -51,9 +51,14 @@ public class AccountsUtil
         return inst_;
     }
 
+    public static String getConfigDir()
+    {
+        return System.getProperty("ACCOUNTS_DATA") + File.separator + "config";
+    }
+
     private void readAllowedTypes(Map<String, String> map, String configFile) throws IOException
     {
-        String file = System.getProperty("ACCOUNTSDB") + File.separator + "config" + File.separator + configFile;
+        String file = getConfigDir() + File.separator + configFile;
 
         File f = new File(file);
         if (!f.exists())

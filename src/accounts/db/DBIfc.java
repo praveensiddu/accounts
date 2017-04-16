@@ -5,7 +5,7 @@ import java.util.Map;
 
 public interface DBIfc
 {
-    void createAndConnectDB(String dir) throws IOException;
+    void createAndConnectDB() throws IOException;
 
     void createBankAccount(String accountName, String bankName) throws DBException;
 
