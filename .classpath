@@ -4,19 +4,20 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry kind="lib" path="lib/eclipselink.jar"/>
 	<classpathentry kind="lib" path="lib/javax.persistence_2.1.0.v201304241213.jar"/>
-	<classpathentry kind="lib" path="lib/apache_poi/poi-3.13-beta1/lib/commons-codec-1.9.jar"/>
-	<classpathentry kind="lib" path="lib/apache_poi/poi-3.13-beta1/lib/commons-logging-1.1.3.jar"/>
-	<classpathentry kind="lib" path="lib/apache_poi/poi-3.13-beta1/lib/junit-4.12.jar"/>
-	<classpathentry kind="lib" path="lib/apache_poi/poi-3.13-beta1/lib/log4j-1.2.17.jar"/>
-	<classpathentry kind="lib" path="lib/apache_poi/poi-3.13-beta1/ooxml-lib/xmlbeans-2.6.0.jar"/>
-	<classpathentry kind="lib" path="lib/apache_poi/poi-3.13-beta1/poi-3.13-beta1-20150723.jar"/>
-	<classpathentry kind="lib" path="lib/apache_poi/poi-3.13-beta1/poi-excelant-3.13-beta1-20150723.jar"/>
-	<classpathentry kind="lib" path="lib/apache_poi/poi-3.13-beta1/poi-ooxml-3.13-beta1-20150723.jar"/>
-	<classpathentry kind="lib" path="lib/apache_poi/poi-3.13-beta1/poi-ooxml-schemas-3.13-beta1-20150723.jar"/>
-	<classpathentry kind="lib" path="lib/apache_poi/poi-3.13-beta1/poi-scratchpad-3.13-beta1-20150723.jar"/>
 	<classpathentry kind="lib" path="lib/xerces/xercesImpl.jar"/>
 	<classpathentry kind="lib" path="lib/xerces/xml-apis.jar"/>
 	<classpathentry kind="lib" path="lib/gson-2.3.1.jar"/>
 	<classpathentry kind="lib" path="lib/derby.jar"/>
+	<classpathentry kind="lib" path="lib/apache_poi/poi-3.16/lib/commons-codec-1.10.jar"/>
+	<classpathentry kind="lib" path="lib/apache_poi/poi-3.16/lib/commons-collections4-4.1.jar"/>
+	<classpathentry kind="lib" path="lib/apache_poi/poi-3.16/lib/commons-logging-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/apache_poi/poi-3.16/lib/junit-4.12.jar"/>
+	<classpathentry kind="lib" path="lib/apache_poi/poi-3.16/lib/log4j-1.2.17.jar"/>
+	<classpathentry kind="lib" path="lib/apache_poi/poi-3.16/ooxml-lib/xmlbeans-2.6.0.jar"/>
+	<classpathentry kind="lib" path="lib/apache_poi/poi-3.16/poi-3.16.jar"/>
+	<classpathentry kind="lib" path="lib/apache_poi/poi-3.16/poi-excelant-3.16.jar"/>
+	<classpathentry kind="lib" path="lib/apache_poi/poi-3.16/poi-ooxml-3.16.jar"/>
+	<classpathentry kind="lib" path="lib/apache_poi/poi-3.16/poi-ooxml-schemas-3.16.jar"/>
+	<classpathentry kind="lib" path="lib/apache_poi/poi-3.16/poi-scratchpad-3.16.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

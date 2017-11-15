@@ -1,5 +1,10 @@
-template for classifyrules should add JOIN_FILE info
+
+template for classifyrules should add APPEND_FILE info
+Is there a difference between APPEND_FILE and INCLUDE_FILE
 Remove bank related sample data
+Add the criteria used for classifying
+export based on user
+
 
 
 

@@ -13,7 +13,7 @@ public class TaxConfig
 {
     public static final String                 BACCOUNT         = "baccount";
     public static final String                 TRANSACTION_TYPE = "transaction_type";
-    public static final String                 JOIN_FILE        = "join_file";
+    public static final String                 APPEND_FILE      = "append_file";
     public static final String                 INCLUDE_FILE     = "include_file";
     public static final String                 DESC_CONTAINS    = "desc_contains";
     public static final String                 DESC_STARTSWITH  = "desc_startswith";
@@ -64,7 +64,7 @@ public class TaxConfig
                                 + ", Expected format key=value. Found=" + line);
                     }
                 }
-                if (JOIN_FILE.equals(key))
+                if (APPEND_FILE.equals(key))
                 {
                     File valFile = new File(valueAsIs);
                     if (!valFile.isAbsolute())

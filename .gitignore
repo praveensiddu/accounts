@@ -2,6 +2,7 @@
 # accounts db directory
 taxdb/
 derby.log
+createDDL_ddlGeneration.jdbc
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/

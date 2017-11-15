@@ -26,6 +26,7 @@ public class DBImpl implements DBIfc
 {
     private EntityManagerFactory      factory;
     private Map<String, BankAccount>  accountsMap;
+    private Map<String, Owner>        ownersMap;
     private Map<String, RealProperty> propertiesMap;
     private Map<String, Company>      companiesMap;
     private Map<String, IGroup>       groupsMap;
@@ -66,7 +67,8 @@ public class DBImpl implements DBIfc
         String configDir = data_dir + File.separator + "config";
 
         String cfgFiles[] = { "bbt_statement_format.txt", "dcu_statement_format.txt", "dcu_visa_statement_format.txt",
-                "wellsfargo_statement_format.txt", "amex_statement_format.txt", "transaction_types.txt", "tax_category.txt" };
+                "wellsfargo_statement_format.txt", "amex_statement_format.txt", "citicard_statement_format.txt",
+                "transaction_types.txt", "tax_category.txt" };
         for (String cfgFile : cfgFiles)
         {
             File fmtFile = new File(configDir + File.separator + cfgFile);
@@ -91,6 +93,17 @@ public class DBImpl implements DBIfc
         if (!fmtFile.exists())
             Files.copy(new File(getClass().getResource("/accounts/resources/CommonRulesInclude_Rental.txt").getFile()).toPath(),
                     fmtFile.toPath());
+        File fmtFile1 = new File(classifyRulesDir + File.separator + "Main_ClassifyRules.txt");
+        if (!fmtFile1.exists())
+            Files.copy(new File(getClass().getResource("/accounts/resources/Main_ClassifyRules.txt").getFile()).toPath(),
+                    fmtFile1.toPath());
+
+        for (int i = 2014; i < 2030; i++)
+        {
+            String yearDir = data_dir + File.separator + "classify_rules" + File.separator + i + File.separator;
+            File yearDirFile = new File(yearDir);
+            yearDirFile.mkdir();
+        }
 
     }
 
@@ -143,6 +156,7 @@ public class DBImpl implements DBIfc
         EntityManager em = factory.createEntityManager();
         List<BankAccount> acList = em.createNamedQuery("BankAccount.getList", BankAccount.class).getResultList();
         List<RealProperty> propList = em.createNamedQuery("RealProperty.getList", RealProperty.class).getResultList();
+        List<Owner> userList = em.createNamedQuery("Owner.getList", Owner.class).getResultList();
         List<IGroup> groupList = em.createNamedQuery("IGroup.getList", IGroup.class).getResultList();
         List<Company> companyList = em.createNamedQuery("Company.getList", Company.class).getResultList();
         em.close();
@@ -155,6 +169,11 @@ public class DBImpl implements DBIfc
         for (RealProperty prop : propList)
         {
             propertiesMap.put(prop.getPropertyName(), prop);
+        }
+        ownersMap = new HashMap<>();
+        for (Owner user : userList)
+        {
+            ownersMap.put(user.getName(), user);
         }
         groupsMap = new HashMap<>();
         for (IGroup group : groupList)
@@ -530,6 +549,12 @@ public class DBImpl implements DBIfc
     }
 
     @Override
+    public Map<String, Owner> getOwners() throws DBException
+    {
+        return ownersMap;
+    }
+
+    @Override
     public Map<String, Company> getCompanies() throws DBException
     {
         return companiesMap;
@@ -623,6 +648,65 @@ public class DBImpl implements DBIfc
             em.close();
         }
 
+    }
+
+    public static List<Owner> parseOwnerFile(String filename) throws IOException, ParseException
+    {
+        final FileReader fr = new FileReader(filename);
+        final BufferedReader br = new BufferedReader(fr);
+        List<Owner> aL = new ArrayList<>();
+        try
+        {
+            for (String line; (line = br.readLine()) != null;)
+            {
+                line = line.toLowerCase().trim();
+                if (line.isEmpty())
+                {
+                    continue;
+                }
+                line = line.toLowerCase().trim();
+                if (line.isEmpty() || line.startsWith("#"))
+                {
+                    continue;
+                }
+
+                String[] fields = line.split(",");
+                if (fields.length != 4)
+                {
+                    throw new IOException("Invalid user line=" + line + ", expected 4 columns");
+                }
+                Owner ba = new Owner();
+                ba.setName(fields[0]);
+                ba.setOwnedBanks(fields[1]);
+                ba.setOwnedProperties(fields[2]);
+                ba.setOwnedCompanies(fields[3]);
+                aL.add(ba);
+
+            }
+        } finally
+        {
+            if (br != null)
+            {
+                try
+                {
+                    br.close();
+                } catch (final IOException e)
+                {
+                    // Ignore
+                }
+            }
+            if (fr != null)
+            {
+                try
+                {
+                    fr.close();
+                } catch (final IOException e)
+                {
+                    // Ignore
+                }
+            }
+        }
+        return aL;
     }
 
     public static List<BankAccount> parseAccountFile(String filename) throws IOException, ParseException
@@ -1098,6 +1182,69 @@ public class DBImpl implements DBIfc
     public Map<String, IGroup> getGroupsMap() throws DBException
     {
         return groupsMap;
+    }
+
+    @Override
+    public void createOwner(Owner owner) throws DBException
+    {
+        if (owner == null)
+            throw new DBException(DBException.INVALID_INPUT, "owner name is null");
+        if (owner.getName() == null || owner.getName().isEmpty())
+            throw new DBException(DBException.INVALID_INPUT, "owner name is empty");
+
+        EntityManager em = factory.createEntityManager();
+        try
+        {
+            em.getTransaction().begin();
+
+            Owner rp = em.find(Owner.class, owner.getName());
+            if (rp == null)
+            {
+                em.persist(owner);
+            } else
+            {
+                em.merge(owner);
+            }
+            em.getTransaction().commit();
+            ownersMap.put(owner.getName(), owner);
+        } finally
+        {
+            em.close();
+        }
+
+    }
+
+    @Override
+    public void updateOwner(Owner owner) throws DBException
+    {
+        throw new DBException(DBException.NOTIMPLEMENTED, "Not implemented");
+    }
+
+    @Override
+    public void deleteOwner(String name) throws DBException
+    {
+        if (name == null)
+            throw new DBException(DBException.INVALID_INPUT, "owner name is null");
+        name = name.trim().toLowerCase();
+        if (name.isEmpty())
+            throw new DBException(DBException.INVALID_INPUT, "owner name is empty");
+        if (!ownersMap.containsKey(name))
+        {
+            return;
+        }
+        EntityManager em = factory.createEntityManager();
+        try
+        {
+            em.getTransaction().begin();
+            Owner ba = em.find(Owner.class, name);
+            em.remove(ba);
+            em.getTransaction().commit();
+            ownersMap.remove(name);
+        } finally
+        {
+            em.close();
+        }
+
     }
 
 }

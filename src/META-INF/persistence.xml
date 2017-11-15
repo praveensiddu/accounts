@@ -4,6 +4,7 @@
   version="2.0" xmlns="http://java.sun.com/xml/ns/persistence">
   <persistence-unit name="taxaccounting" transaction-type="RESOURCE_LOCAL">
     <class>accounts.db.BankAccount</class>
+    <class>accounts.db.Owner</class>
     <class>accounts.db.TRId</class>
     <class>accounts.db.TR</class>
     <class>accounts.db.RealProperty</class>

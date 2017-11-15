@@ -13,6 +13,12 @@ public interface DBIfc
 
     void deleteBankAccount(String accountName) throws DBException;
 
+    void createOwner(Owner user) throws DBException;
+
+    void updateOwner(Owner user) throws DBException;
+
+    void deleteOwner(String user) throws DBException;
+
     void createProperty(RealProperty prop) throws DBException;
 
     void updateProperty(RealProperty prop) throws DBException;
@@ -30,6 +36,8 @@ public interface DBIfc
     Map<String, BankAccount> getAccounts() throws DBException;
 
     Map<String, RealProperty> getProperties() throws DBException;
+
+    Map<String, Owner> getOwners() throws DBException;
 
     Map<String, Company> getCompanies() throws DBException;
 

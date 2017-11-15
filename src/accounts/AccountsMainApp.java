@@ -39,6 +39,7 @@ import accounts.db.DBFactory;
 import accounts.db.DBIfc;
 import accounts.db.DBImpl;
 import accounts.db.IGroup;
+import accounts.db.Owner;
 import accounts.db.RealProperty;
 import accounts.db.TR;
 import accounts.db.TRId;
@@ -775,8 +776,8 @@ public class AccountsMainApp
         dbi.deleteTransactions(ba.getTrTableId());
     }
 
-    public static final String C_CATEGORY_INCOME       = "1. income";
-    public static final String C_CATEGORY_DISTRIBUTION = "2. distribution";
+    public static final String C_CATEGORY_INCOME                = "1. income";
+    public static final String C_CATEGORY_RENT_PASSED_TO_OWNERS = "2. rentpassedtoowners";
 
     private static void createPersonalSummarySheet(XSSFWorkbook workBook, DBIfc dbIfc, Map<String, Float[]> propTable,
                                                    final Map<String, ArrayList<TR>> companyTrMap,
@@ -870,7 +871,7 @@ public class AccountsMainApp
             {
                 ownerCount = rp.getOwnerCount();
             }
-            Float distribution = trTypeMap.get(C_CATEGORY_DISTRIBUTION);
+            Float distribution = trTypeMap.get(C_CATEGORY_RENT_PASSED_TO_OWNERS);
             System.out.println("Processing property=" + propName);
             if (distribution == null)
             {
@@ -879,7 +880,7 @@ public class AccountsMainApp
             {
                 distribution += -(propTable.get(propName)[scheduleEMap.get(RENT)] * ownerCount);
             }
-            trTypeMap.put(C_CATEGORY_DISTRIBUTION, distribution);
+            trTypeMap.put(C_CATEGORY_RENT_PASSED_TO_OWNERS, distribution);
 
         }
         for (final String name : otherTrMap.keySet())
@@ -889,7 +890,7 @@ public class AccountsMainApp
             setOfCategories.addAll(trTypeMap.keySet());
         }
 
-        setOfCategories.add(C_CATEGORY_DISTRIBUTION);
+        setOfCategories.add(C_CATEGORY_RENT_PASSED_TO_OWNERS);
         List<String> listCompanies = new ArrayList<>(companyTrMap.keySet());
         Collections.sort(listCompanies);
 
@@ -939,9 +940,9 @@ public class AccountsMainApp
             }
 
             Float income = new Float(0);
-            if (compTrTypeMap != null && compTrTypeMap.containsKey(C_CATEGORY_DISTRIBUTION))
+            if (compTrTypeMap != null && compTrTypeMap.containsKey(C_CATEGORY_RENT_PASSED_TO_OWNERS))
             {
-                income = -(compTrTypeMap.get(C_CATEGORY_DISTRIBUTION) * 100 / distPercent);
+                income = -(compTrTypeMap.get(C_CATEGORY_RENT_PASSED_TO_OWNERS) * 100 / distPercent);
                 compTrTypeMap.put(C_CATEGORY_INCOME, income);
             }
 
@@ -1250,12 +1251,12 @@ public class AccountsMainApp
             sheet.setColumnWidth(5, 4000);
             sheet.setColumnWidth(6, 6000);
             sheet.setColumnWidth(7, 6000);
-            // sheet.protectSheet("password");
+            sheet.protectSheet("password");
 
             // Locks the whole sheet sheet.enableLocking();
 
         }
-        // workBook.lockStructure();
+        workBook.lockStructure();
         String outFile = file;
         if (file == null)
         {
@@ -1613,6 +1614,10 @@ public class AccountsMainApp
     public static final String              CREATEACS        = "createacs";
     public static final String              LISTACS          = "listacs";
     public static final String              DELETEACS        = "deleteacs";
+    public static final String              CREATEOWNERS     = "createowners";
+    public static final String              LISTOWNERS       = "listowners";
+    public static final String              DELETEOWNERS     = "deleteowners";
+
     public static final String              CREATEPROPS      = "createprops";
     public static final String              LISTPROPS        = "listprops";
     public static final String              DELETEPROPS      = "deleteprops";
@@ -1704,6 +1709,50 @@ public class AccountsMainApp
                     System.out.println(ba);
                 }
                 System.out.println("Number of accounts deleted=" + (initialCount - dbi.getAccounts().size()));
+            } else if (CREATEOWNERS.equalsIgnoreCase(action))
+            {
+                if (argHash.get("file") == null)
+                {
+                    usage("-file argument is required.");
+                }
+                List<Owner> acL = DBImpl.parseOwnerFile(argHash.get("file"));
+                DBIfc dbi = DBFactory.createDBIfc();
+                dbi.createAndConnectDB();
+
+                for (Owner rp : acL)
+                {
+                    dbi.createOwner(rp);
+                }
+                for (Owner rp1 : dbi.getOwners().values())
+                {
+                    System.out.println(rp1);
+                }
+
+            } else if (LISTOWNERS.equalsIgnoreCase(action))
+            {
+                DBIfc dbi = DBFactory.createDBIfc();
+                dbi.createAndConnectDB();
+                for (Owner ba : dbi.getOwners().values())
+                {
+                    System.out.println(ba);
+                }
+            } else if (DELETEOWNERS.equalsIgnoreCase(action))
+            {
+                if (argHash.get("file") == null)
+                {
+                    usage("-file argument is required.");
+                }
+                List<Owner> rpL = DBImpl.parseOwnerFile(argHash.get("file"));
+                DBIfc dbi = DBFactory.createDBIfc();
+                dbi.createAndConnectDB();
+                for (Owner rp : rpL)
+                {
+                    dbi.deleteProperty(rp.getName());
+                }
+                for (Owner rp1 : dbi.getOwners().values())
+                {
+                    System.out.println(rp1);
+                }
             } else if (CREATEPROPS.equalsIgnoreCase(action))
             {
                 if (argHash.get("file") == null)
