@@ -392,7 +392,7 @@ public class AccountsMainApp
                 if (dbIfc.getCompanies().containsKey(rp.getPropMgmtCompany()))
                 {
                     Company comp = dbIfc.getCompanies().get(rp.getPropMgmtCompany());
-                    if (comp != null && comp.getRentPercentage() > 0)
+                    if (comp != null && comp.getRentPercentage() > -1)
                     {
                         rentPercentage = 100 - comp.getRentPercentage();
                     }
@@ -800,8 +800,11 @@ public class AccountsMainApp
         {
             if (!("home equity interest".equalsIgnoreCase(otherName) || "homeinsurance".equalsIgnoreCase(otherName)
                     || "primary home interest".equalsIgnoreCase(otherName) || "primary home taxes".equalsIgnoreCase(otherName)
-                    || "savings interest".equalsIgnoreCase(otherName)
-                    || "personal property auto tax".equalsIgnoreCase(otherName)))
+                    || "savings interest".equalsIgnoreCase(otherName) || "personal property auto tax".equalsIgnoreCase(otherName)
+                    || "primaryheloc_mortgageinterest".equalsIgnoreCase(otherName)
+                    || "primaryhome_insurance".equalsIgnoreCase(otherName)
+                    || "primaryhome_mortgageinterest".equalsIgnoreCase(otherName)
+                    || "primaryhome_taxes".equalsIgnoreCase(otherName)))
 
             {
                 continue;
@@ -1234,14 +1237,14 @@ public class AccountsMainApp
             sheet.addValidationData(propertyDataValidation);
 
             sheet.setAutoFilter(CellRangeAddress.valueOf("A1:N1"));
-            sheet.lockDeleteColumns(true);
-            sheet.lockDeleteRows(true);
+            // sheet.lockDeleteColumns(true);
+            // sheet.lockDeleteRows(true);
             // sheet.lockFormatCells(true);
             // sheet.lockFormatColumns(true);
             // sheet.lockFormatRows(true);
-            sheet.lockInsertColumns(true);
-            sheet.lockInsertRows(true);
-            sheet.lockAutoFilter(false);
+            // sheet.lockInsertColumns(true);
+            // sheet.lockInsertRows(true);
+            // sheet.lockAutoFilter(false);
 
             sheet.setColumnWidth(0, 3000);
             sheet.setColumnWidth(1, 14000);
@@ -1251,12 +1254,12 @@ public class AccountsMainApp
             sheet.setColumnWidth(5, 4000);
             sheet.setColumnWidth(6, 6000);
             sheet.setColumnWidth(7, 6000);
-            sheet.protectSheet("password");
+            // sheet.protectSheet("password");
 
             // Locks the whole sheet sheet.enableLocking();
 
         }
-        workBook.lockStructure();
+        // workBook.lockStructure();
         String outFile = file;
         if (file == null)
         {
