@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
@@ -16,31 +17,12 @@ public class Owner
     @Id
     @Column(length = 40)
     private String       name;
-    private List<String> ownedBanks;
+    @ElementCollection
     private List<String> ownedProperties;
+    @ElementCollection
     private List<String> ownedCompanies;
-
-    public String getName()
-    {
-        return name;
-    }
-
-    public void setName(String name)
-    {
-        if (name == null)
-            return;
-        this.name = name.trim().toLowerCase();
-    }
-
-    public List<String> getOwnedBanks()
-    {
-        return ownedBanks;
-    }
-
-    public void setOwnedBanks(List<String> ownedBanks)
-    {
-        this.ownedBanks = ownedBanks;
-    }
+    @ElementCollection
+    private List<String> ownedBanks;
 
     public static List<String> pipeSepFeilds(String pSepStr)
     {
@@ -58,9 +40,16 @@ public class Owner
         return al;
     }
 
-    public void setOwnedBanks(String ownedBanks)
+    public String getName()
     {
-        this.ownedBanks = pipeSepFeilds(ownedBanks);
+        return name;
+    }
+
+    public void setName(String name)
+    {
+        if (name == null)
+            return;
+        this.name = name.trim().toLowerCase();
     }
 
     public List<String> getOwnedProperties()
@@ -91,6 +80,21 @@ public class Owner
     public void setOwnedCompanies(String ownedCompanies)
     {
         this.ownedCompanies = pipeSepFeilds(ownedCompanies);
+    }
+
+    public List<String> getOwnedBanks()
+    {
+        return ownedBanks;
+    }
+
+    public void setOwnedBanks(List<String> ownedBanks)
+    {
+        this.ownedBanks = ownedBanks;
+    }
+
+    public void setOwnedBanks(String ownedBanks)
+    {
+        this.ownedBanks = pipeSepFeilds(ownedBanks);
     }
 
     @Override

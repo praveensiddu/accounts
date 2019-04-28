@@ -27,6 +27,7 @@ import org.apache.poi.ss.usermodel.DataValidationConstraint;
 import org.apache.poi.ss.usermodel.DataValidationHelper;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellRangeAddressList;
+import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFDataValidationHelper;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -783,6 +784,10 @@ public class AccountsMainApp
                                                    final Map<String, ArrayList<TR>> companyTrMap,
                                                    final Map<String, ArrayList<TR>> otherTrMap) throws DBException
     {
+        if (limituser != null)
+        {
+            return;
+        }
         XSSFSheet sheet = workBook.createSheet("PersonalSummary");
 
         Map<String, Map<String, Float>> trTypeTotalMap = new HashMap<>();
@@ -807,7 +812,7 @@ public class AccountsMainApp
                     || "primaryhome_taxes".equalsIgnoreCase(otherName)))
 
             {
-                continue;
+                // continue;
             }
 
             rowNum++;
@@ -821,7 +826,8 @@ public class AccountsMainApp
             Cell cell = currentRow.createCell(col++);
 
             final Map<String, Float> otherTrTypeMap = trTypeTotalMap.get(otherName);
-            cell.setCellValue(otherTrTypeMap.get("ignore"));
+            if (otherTrTypeMap != null && otherTrTypeMap.get("ignore") != null)
+                cell.setCellValue(otherTrTypeMap.get("ignore"));
 
         }
 
@@ -832,7 +838,7 @@ public class AccountsMainApp
 
     private static void createCompanySummarySheet(XSSFWorkbook workBook, DBIfc dbIfc, Map<String, Float[]> propTable,
                                                   final Map<String, ArrayList<TR>> companyTrMap,
-                                                  final Map<String, ArrayList<TR>> otherTrMap) throws DBException
+                                                  final Map<String, ArrayList<TR>> otherTrMap) throws DBException, IOException
     {
         XSSFSheet sheet = workBook.createSheet("CompanySummary");
 
@@ -923,9 +929,27 @@ public class AccountsMainApp
             }
         }
 
+        final Map<String, Owner> ownerMap = dbIfc.getOwners();
+        List<String> limitCompanies = null;
+        if (limituser != null)
+        {
+            if (ownerMap.get(limituser) == null)
+            {
+                throw new IOException("unknown user=" + limituser);
+            }
+            limitCompanies = ownerMap.get(limituser).getOwnedCompanies();
+        }
+
         int rowNum = 0;
         for (String compName : listCompanies)
         {
+            if (limitCompanies != null)
+            {
+                if (!limitCompanies.contains(compName))
+                {
+                    continue;
+                }
+            }
             rowNum++;
             int col = 0;
             XSSFRow currentRow = sheet.createRow(rowNum);
@@ -964,14 +988,15 @@ public class AccountsMainApp
             cell.setCellValue(profit);
 
         }
+        /*
         // Create dummy rows
-
+        
         for (int i = 0; i < 5; i++)
         {
             rowNum++;
             XSSFRow currentRow = sheet.createRow(rowNum);
         }
-
+        
         for (String otherName : listOtherEntities)
         {
             if ("home equity interest".equalsIgnoreCase(otherName) || "homeinsurance".equalsIgnoreCase(otherName)
@@ -989,17 +1014,18 @@ public class AccountsMainApp
                 cell.setCellValue(otherName);
             }
             final Map<String, Float> otherTrTypeMap = trTypeTotalMap.get(otherName);
-
+        
             for (String colName : listCategories)
             {
-
+        
                 Cell cell = null;
                 cell = currentRow.createCell(col++);
                 if (otherTrTypeMap.get(colName) != null)
                     cell.setCellValue(otherTrTypeMap.get(colName));
             }
-
+        
         }
+        */
 
         sheet.setColumnWidth(0, 3000);
         sheet.setColumnWidth(1, 3000);
@@ -1016,7 +1042,8 @@ public class AccountsMainApp
         sheet.setColumnWidth(12, 3000);
     }
 
-    private static void createRentalSummarySheet(XSSFWorkbook workBook, Map<String, Float[]> propTable)
+    private static void createRentalSummarySheet(XSSFWorkbook workBook, Map<String, Float[]> propTable,
+                                                 DBIfc dbIfc) throws DBException, IOException
     {
         XSSFSheet sheet = workBook.createSheet("RentalSummary");
         {
@@ -1038,10 +1065,27 @@ public class AccountsMainApp
             Cell cell = currentRow.createCell(col++);
             cell.setCellValue("Profit");
         }
+        final Map<String, Owner> ownerMap = dbIfc.getOwners();
+        List<String> limitProperties = null;
+        if (limituser != null)
+        {
+            if (ownerMap.get(limituser) == null)
+            {
+                throw new IOException("unknown user=" + limituser);
+            }
+            limitProperties = ownerMap.get(limituser).getOwnedProperties();
+        }
 
         int rowNum = 0;
         for (String propName : propTable.keySet())
         {
+            if (limitProperties != null)
+            {
+                if (!limitProperties.contains(propName))
+                {
+                    continue;
+                }
+            }
             rowNum++;
             XSSFRow currentRow = sheet.createRow(rowNum);
             Float[] values = propTable.get(propName);
@@ -1064,9 +1108,66 @@ public class AccountsMainApp
                 }
             }
             Cell cell = currentRow.createCell(col++);
-            cell.setCellValue(totalProfit);
+            // Make this a formula
+            String strFormula = "SUM(B" + (rowNum + 1) + ":L" + (rowNum + 1) + ")";
+
+            cell.setCellType(XSSFCell.CELL_TYPE_FORMULA);
+            cell.setCellFormula(strFormula);
+
+            // cell.setCellValue(totalProfit);
+
+            // cell.setCellFormula("SUM(C70:C76)");
 
         }
+        // Add some empty rows
+        rowNum++;
+        sheet.createRow(rowNum);
+        rowNum++;
+        sheet.createRow(rowNum);
+
+        final Map<String, RealProperty> propertyMap = dbIfc.getProperties();
+
+        for (String propName : propTable.keySet())
+        {
+            if (limitProperties != null)
+            {
+                if (!limitProperties.contains(propName))
+                {
+                    continue;
+                }
+            }
+            rowNum++;
+            XSSFRow currentRow = sheet.createRow(rowNum);
+            {
+                Cell cell = currentRow.createCell(0);
+                cell.setCellValue(propName);
+            }
+            Float[] values = propTable.get(propName);
+
+            int col = 1;
+            for (int i = 0; i < scheduleEAry.length; i++)
+            {
+                if (scheduleEAry[i] == null)
+                    continue;
+                Cell cell = currentRow.createCell(col++);
+                if (values[i] != null)
+                {
+                    cell.setCellValue(values[i] * propertyMap.get(propName).getOwnerCount());
+                }
+            }
+            Cell cell = currentRow.createCell(col++);
+            // Make this a formula
+            String strFormula = "SUM(B" + (rowNum + 1) + ":L" + (rowNum + 1) + ")";
+
+            cell.setCellType(XSSFCell.CELL_TYPE_FORMULA);
+            cell.setCellFormula(strFormula);
+
+            // cell.setCellValue(totalProfit);
+
+            // cell.setCellFormula("SUM(C70:C76)");
+
+        }
+
         sheet.setColumnWidth(0, 4000);
         sheet.setColumnWidth(1, 3000);
         sheet.setColumnWidth(2, 3000);
@@ -1080,6 +1181,8 @@ public class AccountsMainApp
         sheet.setColumnWidth(10, 3000);
         sheet.setColumnWidth(11, 3000);
     }
+
+    private static String limituser = null;
 
     private static void exportToExcel(Map<String, Float[]> propTable, final Map<String, ArrayList<TR>> companyTrMap,
                                       final Map<String, ArrayList<TR>> otherTrMap, String accountName, String file, String filter,
@@ -1110,11 +1213,23 @@ public class AccountsMainApp
         wrapAlignCellStyle.setVerticalAlignment(CellStyle.VERTICAL_TOP);
         CellStyle topAlignCellStyle = workBook.createCellStyle();
         topAlignCellStyle.setVerticalAlignment(CellStyle.VERTICAL_TOP);
-        createRentalSummarySheet(workBook, propTable);
+        createRentalSummarySheet(workBook, propTable, dbIfc);
         createCompanySummarySheet(workBook, dbIfc, propTable, companyTrMap, otherTrMap);
         createPersonalSummarySheet(workBook, dbIfc, propTable, companyTrMap, otherTrMap);
 
         Map<String, BankAccount> baMap = new TreeMap<>(dbIfc.getAccounts());
+
+        final Map<String, Owner> ownerMap = dbIfc.getOwners();
+        final Map<String, BankAccount> bankAccountMap = dbIfc.getAccounts();
+        List<String> limitBanks = null;
+        if (limituser != null)
+        {
+            if (ownerMap.get(limituser) == null)
+            {
+                throw new IOException("unknown user=" + limituser);
+            }
+            limitBanks = ownerMap.get(limituser).getOwnedBanks();
+        }
 
         for (BankAccount ba : baMap.values())
         {
@@ -1123,6 +1238,13 @@ public class AccountsMainApp
                 continue;
             }
             String baName = ba.getName();
+            if (limitBanks != null)
+            {
+                if (!limitBanks.contains(baName))
+                {
+                    continue;
+                }
+            }
 
             XSSFSheet sheet = workBook.createSheet(baName);
             {
@@ -1269,7 +1391,12 @@ public class AccountsMainApp
             {
                 dirFile.mkdir();
             }
-            outFile = dir + File.separator + "export_allaccounts_" + year + ".xlsx";
+            outFile = dir + File.separator + "export_allaccounts_" + year;
+            if (limituser != null)
+            {
+                outFile += "_" + limituser;
+            }
+            outFile += ".xlsx";
         }
         File outFileHandle = new File(outFile);
         if (outFileHandle.exists())
@@ -1596,10 +1723,10 @@ public class AccountsMainApp
         System.out.println("    -A import2db {-dir <dir> | {-bankstatement <csv> -accountname <n>} } [-commit]");
         System.out.println("        dir contains csv files with name accountname.csv or accountname_addendum.csv");
         System.out.println("        Recommended to keep all statements under $ACCOUNTS_DATA/bank_stmts directory\n");
-        System.out.println("    -A classifyindb -taxconfig <f> -year <yyyy>\n");
+        System.out.println("    -A classifyindb -taxconfig <f> -year <yyyy> \n");
         System.out.println("    -A exp2excel -year <yyyy> [-accountname <n>] [-file <f.xlsx>] [-filter \"tr types\"]\n");
         System.out.println("    -A impexcel -year <yyyy> [-commit] [-setasis] [-accountname <n>] [-file <f.xlsx>]\n");
-        System.out.println("    -A classify_exp -taxconfig <f> -year <yyyy>\n");
+        System.out.println("    -A classify_exp -taxconfig <f> -year <yyyy> [-limituser <user>]\n");
 
         System.exit(1);
     }
@@ -1640,6 +1767,7 @@ public class AccountsMainApp
         ALL_OPTS.put("accountname", Getopt.CONTRNT_S);
         ALL_OPTS.put("taxconfig", Getopt.CONTRNT_S);
         ALL_OPTS.put("year", Getopt.CONTRNT_I);
+        ALL_OPTS.put("limituser", Getopt.CONTRNT_S);
         ALL_OPTS.put("file", Getopt.CONTRNT_S);
         ALL_OPTS.put("dir", Getopt.CONTRNT_S);
         ALL_OPTS.put("commit", Getopt.CONTRNT_NOARG);
@@ -2001,6 +2129,7 @@ public class AccountsMainApp
                 {
                     System.out.println("" + sb);
                 }
+                limituser = argHash.get("limituser");
                 exportToExcel(propTable, companyTrMap, otherTrMap, argHash.get("accountname"), argHash.get("file"),
                         argHash.get("filter"), new Integer(argHash.get("year")).intValue());
 

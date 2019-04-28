@@ -115,6 +115,10 @@ public class BankStatement
                 return true;
             }
         }
+        if (line.startsWith("#"))
+        {
+            return true;
+        }
         String isEmptyLine = line.replaceAll(",", "");
         isEmptyLine = isEmptyLine.trim();
         if (isEmptyLine.isEmpty())
