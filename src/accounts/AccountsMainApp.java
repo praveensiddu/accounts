@@ -117,7 +117,22 @@ public class AccountsMainApp
             map.put(tr.getTrType(), f);
         }
         return map;
+    }
 
+    private static Map<String, Float> trOtherTypeTotal(final ArrayList<TR> art)
+    {
+        final Map<String, Float> map = new HashMap<>();
+        for (final TR tr : art)
+        {
+            if (!map.containsKey(tr.getOtherEntity()))
+            {
+                map.put(tr.getOtherEntity(), tr.getDebit());
+                continue;
+            }
+            final Float f = map.get(tr.getOtherEntity()) + tr.getDebit();
+            map.put(tr.getOtherEntity(), f);
+        }
+        return map;
     }
 
     private static StringBuffer report(final int year, final DBIfc dbIfc, Map<String, Float[]> propTable,
@@ -798,7 +813,15 @@ public class AccountsMainApp
             trTypeTotalMap.put(name, trTypeMap);
         }
 
-        List<String> listOtherEntities = new ArrayList<>(otherTrMap.keySet());
+        ArrayList<TR> realestateTrans = companyTrMap.get("realestate");
+        final Map<String, Float> trTypeMap = trOtherTypeTotal(realestateTrans);
+
+        for (final TR tr : realestateTrans)
+        {
+            trTypeTotalMap.put(tr.getOtherEntity(), trTypeMap);
+        }
+
+        List<String> listOtherEntities = new ArrayList<>(trTypeTotalMap.keySet());
         Collections.sort(listOtherEntities);
         int rowNum = 0;
         for (String otherName : listOtherEntities)
@@ -826,8 +849,15 @@ public class AccountsMainApp
             Cell cell = currentRow.createCell(col++);
 
             final Map<String, Float> otherTrTypeMap = trTypeTotalMap.get(otherName);
-            if (otherTrTypeMap != null && otherTrTypeMap.get("ignore") != null)
-                cell.setCellValue(otherTrTypeMap.get("ignore"));
+            if (otherTrTypeMap != null)
+            {
+                if (otherTrTypeMap.get("ignore") != null)
+                    cell.setCellValue(otherTrTypeMap.get("ignore"));
+                else if (otherTrTypeMap.get(otherName) != null)
+                {
+                    cell.setCellValue(otherTrTypeMap.get(otherName));
+                }
+            }
 
         }
 
