@@ -1216,7 +1216,7 @@ public class AccountsMainApp
 
     private static void exportToExcel(Map<String, Float[]> propTable, final Map<String, ArrayList<TR>> companyTrMap,
                                       final Map<String, ArrayList<TR>> otherTrMap, String accountName, String file, String filter,
-                                      int year) throws DBException, IOException
+                                      int year, boolean unclassifiedOnly) throws DBException, IOException
     {
         DBIfc dbIfc = DBFactory.createDBIfc();
 
@@ -1315,6 +1315,13 @@ public class AccountsMainApp
             int RowNum = 0;
             for (TR tr : trMap.values())
             {
+                if (unclassifiedOnly)
+                {
+                    if (tr.getTrType() != null && !tr.getTrType().isEmpty())
+                    {
+                        continue;
+                    }
+                }
                 final Calendar cal = Calendar.getInstance();
                 cal.setTime(tr.getDate());
 
@@ -1803,6 +1810,7 @@ public class AccountsMainApp
         ALL_OPTS.put("commit", Getopt.CONTRNT_NOARG);
         ALL_OPTS.put("setasis", Getopt.CONTRNT_NOARG);
         ALL_OPTS.put("filter", Getopt.CONTRNT_S);
+        ALL_OPTS.put("unclassified", Getopt.CONTRNT_NOARG);
 
     }
 
@@ -2125,7 +2133,7 @@ public class AccountsMainApp
                     System.out.println("" + sb);
                 }
                 exportToExcel(propTable, companyTrMap, otherTrMap, argHash.get("accountname"), argHash.get("file"),
-                        argHash.get("filter"), new Integer(argHash.get("year")).intValue());
+                        argHash.get("filter"), new Integer(argHash.get("year")).intValue(), argHash.get("unclassified") != null);
 
             } else if (IMPEXCEL.equalsIgnoreCase(action))
             {
@@ -2161,7 +2169,7 @@ public class AccountsMainApp
                 }
                 limituser = argHash.get("limituser");
                 exportToExcel(propTable, companyTrMap, otherTrMap, argHash.get("accountname"), argHash.get("file"),
-                        argHash.get("filter"), new Integer(argHash.get("year")).intValue());
+                        argHash.get("filter"), new Integer(argHash.get("year")).intValue(), argHash.get("unclassified") != null);
 
             } else if (DELETETRS.equalsIgnoreCase(action))
             {

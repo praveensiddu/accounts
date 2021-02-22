@@ -9,8 +9,6 @@ import java.util.Map;
 
 public class AccountsUtil
 {
-    public static final int     COMMENT_MAXLEN     = 100;// should be same as in DB.
-    public static final int     OTHERENTITY_MAXLEN = 50; // should be same as in DB.
     private static AccountsUtil inst_;
 
     public static AccountsUtil createInstance() throws IOException
@@ -22,7 +20,20 @@ public class AccountsUtil
         return inst_;
     }
 
-    private Map<String, String> allowedTrTypes = new HashMap<>();
+    private AccountsUtil() throws IOException
+    {
+        if (System.getProperty("ACCOUNTSDB") == null)
+        {
+            throw new IOException(
+                    "Set Java system property ACCOUNTSDB to directory where accounts repository is present or to be created");
+        }
+        readAllowedTypes(allowedTrTypes, "transaction_types.txt");
+        readAllowedTypes(allowedTaxCategories, "tax_category.txt");
+    }
+
+    public static final int     COMMENT_MAXLEN     = 100;            // should be same as in DB.
+    public static final int     OTHERENTITY_MAXLEN = 50;             // should be same as in DB.
+    private Map<String, String> allowedTrTypes     = new HashMap<>();
 
     public Map<String, String> getAllowedTrTypes()
     {
@@ -96,19 +107,6 @@ public class AccountsUtil
                 }
             }
         }
-    }
-
-    public AccountsUtil() throws IOException
-    {
-
-        if (System.getProperty("ACCOUNTSDB") == null)
-        {
-            throw new IOException(
-                    "Set Java system property ACCOUNTSDB to directory where accounts repository is present or to be created");
-        }
-        readAllowedTypes(allowedTrTypes, "transaction_types.txt");
-        readAllowedTypes(allowedTaxCategories, "tax_category.txt");
-
     }
 
     public static void main(final String[] args)
