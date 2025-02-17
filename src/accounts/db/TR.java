@@ -265,6 +265,7 @@ public abstract class TR
     {
         boolean negative = false;
         floatStr = floatStr.replaceAll(",", "");
+        floatStr = floatStr.replaceAll("\\$", "");
 
         if (floatStr.startsWith("("))
         {
@@ -365,7 +366,12 @@ public abstract class TR
         {
             throw new IOException("Empty transaction");
         }
-        String[] fields = line.split(",", -1);
+        String delim = ",";
+        if (!bc.getDelim().equals(","))
+        {// Bank of America is not comma separated. Instead we can download pipe separated
+            delim = "\\|";
+        }
+        String[] fields = line.split(delim, -1);
         fields = approxCsvCorrection(fields);
 
         if (fields.length <= bc.getDateIndex())
@@ -457,7 +463,7 @@ public abstract class TR
         }
         if (getDescription() == null)
         {
-            throw new IOException("Description is mandatory");
+            throw new IOException("Description is mandatory. Line=" + line + "\nfields=" + fields);
         }
     }
 

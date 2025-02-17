@@ -814,11 +814,14 @@ public class AccountsMainApp
         }
 
         ArrayList<TR> realestateTrans = companyTrMap.get("realestate");
-        final Map<String, Float> trTypeMap = trOtherTypeTotal(realestateTrans);
-
-        for (final TR tr : realestateTrans)
+        if (realestateTrans != null)
         {
-            trTypeTotalMap.put(tr.getOtherEntity(), trTypeMap);
+            final Map<String, Float> trTypeMap = trOtherTypeTotal(realestateTrans);
+
+            for (final TR tr : realestateTrans)
+            {
+                trTypeTotalMap.put(tr.getOtherEntity(), trTypeMap);
+            }
         }
 
         List<String> listOtherEntities = new ArrayList<>(trTypeTotalMap.keySet());
@@ -1527,6 +1530,7 @@ public class AccountsMainApp
                 BankStatement bs;
                 try
                 {
+                    System.out.println("Processing" + stmtFile.getAbsolutePath());
                     bs = new BankStatement(stmtFile.getAbsolutePath(), ba.getName(), null);
                     checkAndCommit(bs, commit);
                 } catch (IOException | DBException | ParseException e)

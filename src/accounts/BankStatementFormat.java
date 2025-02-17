@@ -20,6 +20,7 @@ public class BankStatementFormat
     public static final String CHECK_NUMBER_COL        = "check_number_col";
     public static final String FEES_COL                = "fees_col";
     public static final String DATE_FORMAT             = "date_format";
+    public static final String DELIM                   = "delim";
 
     private List<String>       ignLineStartsWith       = new ArrayList<>();
 
@@ -32,6 +33,7 @@ public class BankStatementFormat
     private int                creditIndex             = -1;
     private int                checkNoIndex            = -1;
     private int                feesIndex               = -1;
+    private String             delim                   = ",";
     private String             dateFormat;
 
     public List<String> getIgnLineStartsWith()
@@ -127,6 +129,9 @@ public class BankStatementFormat
                 } else if (lCaseLine.startsWith(FEES_COL))
                 {
                     setFeesIndex(new Integer(fields[1].trim()).intValue() - 1);
+                } else if (lCaseLine.startsWith(DELIM))
+                {
+                    setDelim(fields[1].trim());
                 }
             }
         } finally
@@ -239,6 +244,16 @@ public class BankStatementFormat
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+
+    public String getDelim()
+    {
+        return delim;
+    }
+
+    public void setDelim(String delim)
+    {
+        this.delim = delim;
     }
 
 }

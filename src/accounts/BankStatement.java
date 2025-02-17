@@ -1,8 +1,10 @@
 package accounts;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,7 +54,11 @@ public class BankStatement
         bc = new BankStatementFormat(bankAccount.getBankName(), bankStFormat);
 
         final FileReader fr = new FileReader(filename);
-        final BufferedReader br = new BufferedReader(fr);
+
+        String charset = "UTF-8";
+        final BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filename), charset));
+
+        // final BufferedReader br = new BufferedReader(fr);
         try
         {
             for (String line; (line = br.readLine()) != null;)
