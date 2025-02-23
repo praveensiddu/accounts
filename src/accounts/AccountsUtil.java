@@ -67,6 +67,11 @@ public class AccountsUtil
         return System.getProperty("ACCOUNTS_DATA") + File.separator + "config";
     }
 
+    public static String getStatementFormatDir()
+    {
+        return System.getProperty("STATEMENT_FORMAT_DIR");
+    }
+
     private void readAllowedTypes(Map<String, String> map, String configFile) throws IOException
     {
         String file = getConfigDir() + File.separator + configFile;

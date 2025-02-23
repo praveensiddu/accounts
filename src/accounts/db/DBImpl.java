@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -39,6 +38,7 @@ public class DBImpl implements DBIfc
         {
             throw new IOException("Directory not present=" + data_dir);
         }
+        /*
         String dirs[] = { "classify_rules", "bank_stmts", "config", "samples" };
         for (String dirtocreate : dirs)
         {
@@ -50,60 +50,7 @@ public class DBImpl implements DBIfc
                 throw new IOException("Unable to create directory=" + pathFile);
             }
         }
-
-        for (int i = 2014; i < 2030; i++)
-        {
-            String yearDir = data_dir + File.separator + "bank_stmts" + File.separator + i + File.separator;
-            File yearDirFile = new File(yearDir);
-            yearDirFile.mkdir();
-        }
-
-        if (getClass().getResource("/accounts/resources/bbt_statement_format.txt") == null)
-        {
-            throw new IOException(
-                    "Internal error. Unable to find resource in package=" + "/accounts/resources/bbt_statement_format.txt");
-
-        }
-        String configDir = data_dir + File.separator + "config";
-
-        String cfgFiles[] = { "bbt_statement_format.txt", "dcu_statement_format.txt", "dcu_visa_statement_format.txt",
-                "wellsfargo_statement_format.txt", "amex_statement_format.txt", "citicard_statement_format.txt",
-                "transaction_types.txt", "tax_category.txt" };
-        for (String cfgFile : cfgFiles)
-        {
-            File fmtFile = new File(configDir + File.separator + cfgFile);
-            if (!fmtFile.exists())
-                Files.copy(new File(getClass().getResource("/accounts/resources/" + cfgFile).getFile()).toPath(),
-                        fmtFile.toPath());
-        }
-
-        String samplesDir = data_dir + File.separator + "samples";
-
-        String samplesFiles[] = { "bankaccounts.csv", "properties.csv", "groups.csv", "companies.csv" };
-        for (String sampleFile : samplesFiles)
-        {
-            File fmtFile = new File(samplesDir + File.separator + sampleFile);
-            if (!fmtFile.exists())
-                Files.copy(new File(getClass().getResource("/accounts/resources/" + sampleFile).getFile()).toPath(),
-                        fmtFile.toPath());
-        }
-
-        String classifyRulesDir = data_dir + File.separator + "classify_rules";
-        File fmtFile = new File(classifyRulesDir + File.separator + "CommonRulesInclude_Rental.txt");
-        if (!fmtFile.exists())
-            Files.copy(new File(getClass().getResource("/accounts/resources/CommonRulesInclude_Rental.txt").getFile()).toPath(),
-                    fmtFile.toPath());
-        File fmtFile1 = new File(classifyRulesDir + File.separator + "Main_ClassifyRules.txt");
-        if (!fmtFile1.exists())
-            Files.copy(new File(getClass().getResource("/accounts/resources/Main_ClassifyRules.txt").getFile()).toPath(),
-                    fmtFile1.toPath());
-
-        for (int i = 2014; i < 2030; i++)
-        {
-            String yearDir = data_dir + File.separator + "classify_rules" + File.separator + i + File.separator;
-            File yearDirFile = new File(yearDir);
-            yearDirFile.mkdir();
-        }
+        */
 
     }
 

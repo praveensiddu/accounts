@@ -65,12 +65,12 @@ public class BankStatementFormat
                 throw new IOException("Bank name is empty");
             }
             bankName = bankName.toLowerCase();
-            if (System.getProperty("ACCOUNTSDB") == null)
+            if (System.getProperty("STATEMENT_FORMAT_DIR") == null)
             {
                 throw new IOException(
-                        "Set Java system property ACCOUNTSDB to directory where accounts repository is present or to be created");
+                        "Set Java system property STATEMENT_FORMAT_DIR to directory where statement formats are present");
             }
-            file = AccountsUtil.getConfigDir() + File.separator + bankName + "_statement_format.txt";
+            file = AccountsUtil.getStatementFormatDir() + File.separator + bankName + "_statement_format.txt";
         }
         File f = new File(file);
         if (!f.exists())
